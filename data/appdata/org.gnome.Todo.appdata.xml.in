@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyleft 2015 Georges Basile Stavracas Neto <georges.stavracas@gmail.com> -->
+<component type="desktop">
+  <id>org.gnome.Todo.desktop</id>
+  <metadata_license>CC0</metadata_license>
+  <project_license>GPL-3.0+</project_license>
+  <_name>Todo</_name>
+  <_summary>Todo manager for GNOME</_summary>
+
+  <description>
+    <_p>
+      GNOME Todo is a simple task management application designed to integrate with GNOME.
+    </_p>
+  </description>
+
+  <url type="homepage">https://github.com/GeorgesStavracas/gnome-todo</url>
+  <url type="bugtracker">https://github.com/GeorgesStavracas/gnome-todo/issues</url>
+  <project_group>GNOME</project_group>
+
+  <update_contact>georges.stavracas@gmail.com.</update_contact>
+</component>

@@ -1,0 +1,12 @@
+[Desktop Entry]
+_Name=Todo
+_Comment=Manage your personal tasks
+Exec=gnome-todo
+Icon=gnome-todo
+Terminal=false
+Type=Application
+StartupNotify=true
+OnlyShowIn=GNOME;
+Categories=GNOME;GTK;Utility;Extra;
+_Keywords=Task;Productivity;
+DBusActivatable=true

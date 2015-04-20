@@ -12,6 +12,11 @@ BUILT_SOURCES = \
     gtd-resources.h
 
 gnome_todo_SOURCES = \
+	$(BUILT_SOURCES) \
+	gtd-application.c \
+	gtd-application.h \
+	gtd-window.c \
+	gtd-window.h \
 	main.c
 
 gnome_todo_LDFLAGS = \

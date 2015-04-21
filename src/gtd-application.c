@@ -85,14 +85,12 @@ gtd_application_show_about (GSimpleAction *simple,
   if (g_date_time_get_year (date) == created_year)
     {
       copyright = g_strdup_printf (_("Copyright \xC2\xA9 %Id "
-                                     "The Todo authors"),
-                                   created_year);
+                                     "The Todo authors"), created_year);
     }
   else
     {
       copyright = g_strdup_printf (_("Copyright \xC2\xA9 %Id\xE2\x80\x93%Id "
-                                     "The Todo authors"),
-                                   created_year, g_date_time_get_year (date));
+                                     "The Todo authors"), created_year, g_date_time_get_year (date));
     }
 
   gtk_show_about_dialog (GTK_WINDOW (priv->window),

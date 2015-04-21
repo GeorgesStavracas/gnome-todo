@@ -94,7 +94,7 @@ gtd_application_show_about (GSimpleAction *simple,
     }
 
   gtk_show_about_dialog (GTK_WINDOW (priv->window),
-                         "program-name", _("Todo"),
+                         "program-name", _("To Do"),
                          "version", VERSION,
                          "copyright", copyright,
                          "license-type", GTK_LICENSE_GPL_3_0,
@@ -120,7 +120,7 @@ gtd_application_quit (GSimpleAction *simple,
 GtdApplication *
 gtd_application_new (void)
 {
-  g_set_application_name ("Todo");
+  g_set_application_name ("To Do");
 
   return g_object_new (GTD_TYPE_APPLICATION,
                        "application-id", "org.gnome.Todo",

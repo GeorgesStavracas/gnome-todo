@@ -127,7 +127,6 @@ gtd_application_new (void)
   return g_object_new (GTD_TYPE_APPLICATION,
                        "application-id", "org.gnome.Todo",
                        "flags", G_APPLICATION_FLAGS_NONE,
-                       "inactivity-timeout", 30000,
                        NULL);
 }
 

@@ -25,6 +25,7 @@ EXTRA_DIST=                     \
   appdata/org.gnome.Todo.appdata.xml \
   org.gnome.Todo.desktop \
   todo.gresource.xml \
+  ui/menus.ui \
   ui/window.ui \
   theme/Adwaita.css \
   $(appdata_in_files) \

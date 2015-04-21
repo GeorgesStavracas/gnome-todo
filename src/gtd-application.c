@@ -44,7 +44,80 @@ struct _GtdApplication
   GtdApplicationPrivate *priv;
 };
 
+static void           gtd_application_show_about                  (GSimpleAction        *simple,
+                                                                   GVariant             *parameter,
+                                                                   gpointer              user_data);
+
+static void           gtd_application_quit                        (GSimpleAction        *simple,
+                                                                   GVariant             *parameter,
+                                                                   gpointer              user_data);
+
 G_DEFINE_TYPE_WITH_PRIVATE (GtdApplication, gtd_application, GTK_TYPE_APPLICATION)
+
+static const GActionEntry gtd_application_entries[] = {
+  /*{ "new",    gtd_application_create_new_list },*/
+  { "about",  gtd_application_show_about },
+  { "quit",   gtd_application_quit }
+};
+
+static void
+gtd_application_show_about (GSimpleAction *simple,
+                            GVariant      *parameter,
+                            gpointer       user_data)
+{
+  GtdApplicationPrivate *priv = GTD_APPLICATION (user_data)->priv;
+  char *copyright;
+  GDateTime *date;
+  int created_year = 2015;
+
+  date = g_date_time_new_now_local ();
+
+  const gchar *authors[] = {
+    "Georges Basile Stavracas Neto <georges.stavracas@gmail.com>",
+    NULL
+  };
+
+  const gchar *artists[] = {
+    "Allan Day <allanpday@gmail.com>",
+    NULL
+  };
+
+  if (g_date_time_get_year (date) == created_year)
+    {
+      copyright = g_strdup_printf (_("Copyright \xC2\xA9 %Id "
+                                     "The Todo authors"),
+                                   created_year);
+    }
+  else
+    {
+      copyright = g_strdup_printf (_("Copyright \xC2\xA9 %Id\xE2\x80\x93%Id "
+                                     "The Todo authors"),
+                                   created_year, g_date_time_get_year (date));
+    }
+
+  gtk_show_about_dialog (GTK_WINDOW (priv->window),
+                         "program-name", _("Todo"),
+                         "version", VERSION,
+                         "copyright", copyright,
+                         "license-type", GTK_LICENSE_GPL_3_0,
+                         "authors", authors,
+                         "artists", artists,
+                         "logo-icon-name", "gnome-todo",
+                         "translator-credits", _("translator-credits"),
+                         NULL);
+  g_free (copyright);
+  g_date_time_unref (date);
+}
+
+static void
+gtd_application_quit (GSimpleAction *simple,
+                      GVariant      *parameter,
+                      gpointer       user_data)
+{
+  GtdApplicationPrivate *priv = GTD_APPLICATION (user_data)->priv;
+
+  gtk_widget_destroy (priv->window);
+}
 
 GtdApplication *
 gtd_application_new (void)
@@ -62,11 +135,28 @@ static void
 gtd_application_activate (GApplication *application)
 {
   GtdApplicationPrivate *priv = GTD_APPLICATION (application)->priv;
+  GtkBuilder *builder;
+  GMenuModel *appmenu;
 
+  builder = gtk_builder_new_from_resource ("/org/gnome/todo/ui/menus.ui");
+
+  /* window */
   if (priv->window == NULL)
     priv->window = gtd_window_new (GTD_APPLICATION (application));
 
   gtk_widget_show (priv->window);
+
+  /* app menu */
+  appmenu = (GMenuModel*) gtk_builder_get_object (builder, "appmenu");
+
+  g_action_map_add_action_entries (G_ACTION_MAP (application),
+                                   gtd_application_entries,
+                                   G_N_ELEMENTS (gtd_application_entries),
+                                   application);
+
+  gtk_application_set_app_menu (GTK_APPLICATION (application), appmenu);
+
+  g_object_unref (builder);
 }
 
 static void

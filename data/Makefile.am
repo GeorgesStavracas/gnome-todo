@@ -38,3 +38,5 @@ CLEANFILES =                    \
   $(searchprovider_DATA)        \
   $(gsettings_SCHEMAS)          \
   $(appdata_DATA)
+
+-include $(top_srcdir)/git.mk

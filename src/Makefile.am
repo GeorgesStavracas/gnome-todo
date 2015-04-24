@@ -37,3 +37,5 @@ gtd-resources.h: $(top_srcdir)/data/todo.gresource.xml $(resource_files)
 
 CLEANFILES = \
 	$(BUILT_SOURCES)
+
+-include $(top_srcdir)/git.mk

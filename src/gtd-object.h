@@ -21,6 +21,8 @@
 
 #include <glib-object.h>
 
+#include "gtd-types.h"
+
 G_BEGIN_DECLS
 
 #define GTD_TYPE_OBJECT (gtd_object_get_type())

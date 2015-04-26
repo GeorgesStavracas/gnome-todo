@@ -27,11 +27,6 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (GtdApplication, gtd_application, GTD, APPLICATION, GtkApplication)
 
-struct _GtdApplicationClass
-{
-  GtkApplicationClass parent;
-};
-
 GtdApplication *gtd_application_new (void);
 
 G_END_DECLS

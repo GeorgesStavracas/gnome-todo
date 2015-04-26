@@ -29,11 +29,6 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (GtdTask, gtd_task, GTD, TASK, GtdObject)
 
-struct _GtdTaskClass
-{
-  GtdObjectClass parent;
-};
-
 GtdTask*            gtd_task_new                      (const gchar          *uid);
 
 gboolean            gtd_task_get_complete             (GtdTask              *task);

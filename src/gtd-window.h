@@ -30,11 +30,6 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (GtdWindow, gtd_window, GTD, WINDOW, GtkApplicationWindow)
 
-struct _GtdWindowClass
-{
-  GtkApplicationWindowClass parent;
-};
-
 GtkWidget*                gtd_window_new                  (GtdApplication       *application);
 
 G_END_DECLS

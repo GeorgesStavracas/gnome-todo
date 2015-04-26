@@ -12,8 +12,6 @@ AM_SILENT_RULES([yes])
 AM_INIT_AUTOMAKE([1.11.1 dist-xz no-dist-gzip tar-ustar])
 AM_MAINTAINER_MODE([enable])
 
-AC_PROG_CC
-
 dnl ***************************************************************************
 dnl Internationalization
 dnl ***************************************************************************
@@ -36,8 +34,6 @@ AC_PROG_INSTALL
 AC_PROG_INSTALL
 AC_SEARCH_LIBS([strerror],[cposix])
 AC_HEADER_STDC
-
-LT_INIT
 
 # no stupid static libraries
 AC_DISABLE_STATIC([])

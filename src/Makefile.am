@@ -15,6 +15,7 @@ gnome_todo_SOURCES = \
 	$(BUILT_SOURCES) \
 	gtd-application.c \
 	gtd-application.h \
+	gtd-enums.h \
 	gtd-manager.c \
 	gtd-manager.h \
 	gtd-object.c \

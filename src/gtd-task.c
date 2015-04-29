@@ -25,7 +25,6 @@
 typedef struct
 {
   gboolean         complete;
-  gchar           *title;
   gchar           *description;
   gint             position;
   GDateTime       *dt;
@@ -60,9 +59,6 @@ static void
 gtd_task_finalize (GObject *object)
 {
   GtdTask *self = (GtdTask*) object;
-
-  if (self->priv->title)
-    g_free (self->priv->title);
 
   if (self->priv->description)
     g_free (self->priv->description);
@@ -108,7 +104,7 @@ gtd_task_get_property (GObject    *object,
       break;
 
     case PROP_TITLE:
-      g_value_set_string (value, self->priv->title);
+      g_value_set_string (value, gtd_task_get_title (self));
       break;
 
     default:
@@ -543,9 +539,13 @@ gtd_task_set_position (GtdTask *task,
 const gchar*
 gtd_task_get_title (GtdTask *task)
 {
+  ECalComponentText summary;
+
   g_return_val_if_fail (GTD_IS_TASK (task), NULL);
 
-  return task->priv->title;
+  e_cal_component_get_summary (task->priv->component, &summary);
+
+  return summary.value;
 }
 
 /**
@@ -562,15 +562,21 @@ void
 gtd_task_set_title (GtdTask     *task,
                     const gchar *title)
 {
-  g_assert (GTD_IS_TASK (task));
-  g_assert (g_utf8_validate (title, -1, NULL));
+  ECalComponentText summary;
 
-  if (g_strcmp0 (task->priv->title, title) != 0)
+  g_return_if_fail (GTD_IS_TASK (task));
+  g_return_if_fail (g_utf8_validate (title, -1, NULL));
+
+  e_cal_component_get_summary (task->priv->component, &summary);
+
+  if (g_strcmp0 (summary.value, title) != 0)
     {
-      if (task->priv->title)
-        g_free (task->priv->title);
+      ECalComponentText new_summary;
 
-      task->priv->title = g_strdup (title);
+      new_summary.value = title;
+      new_summary.altrep = NULL;
+
+      e_cal_component_set_summary (task->priv->component, &new_summary);
 
       g_object_notify (G_OBJECT (task), "title");
     }

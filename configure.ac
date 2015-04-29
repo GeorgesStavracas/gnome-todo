@@ -83,7 +83,8 @@ PKG_CHECK_MODULES(GNOME_TODO,
                   gtk+-3.0 >= 3.16.0
                   libecal-1.2 >= 3.13.90
                   libedataserver-1.2 >= 3.17.1
-                  libedataserverui-1.2 >= 3.17.1)
+                  libedataserverui-1.2 >= 3.17.1
+                  libical >= 0.43)
 
 APPSTREAM_XML
 

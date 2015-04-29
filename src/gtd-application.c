@@ -67,15 +67,9 @@ gtd_application__manager_notify_ready_cb (GtdManager *manager,
                                           gpointer    user_data)
 {
   if (!gtd_object_get_ready (GTD_OBJECT (manager)))
-    {
-      g_message ("%s: manager not ready", G_STRFUNC);
-      g_application_mark_busy (G_APPLICATION (user_data));
-    }
+    g_application_mark_busy (G_APPLICATION (user_data));
   else
-    {
-      g_message ("%s: manager ready", G_STRFUNC);
-      g_application_unmark_busy (G_APPLICATION (user_data));
-    }
+    g_application_unmark_busy (G_APPLICATION (user_data));
 }
 
 static void

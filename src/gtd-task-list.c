@@ -82,6 +82,10 @@ gtd_task_list_get_property (GObject    *object,
       g_value_set_string (value, self->priv->name);
       break;
 
+    case PROP_SOURCE:
+      g_value_set_object (value, self->priv->source);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     }
@@ -99,6 +103,10 @@ gtd_task_list_set_property (GObject      *object,
     {
     case PROP_NAME:
       gtd_task_list_set_name (self, g_value_get_string (value));
+      break;
+
+    case PROP_SOURCE:
+      self->priv->source = g_value_get_object (value);
       break;
 
     default:
@@ -141,7 +149,7 @@ gtd_task_list_class_init (GtdTaskListClass *klass)
                              _("Source of the list"),
                              _("The parent source that handles the list"),
                              E_TYPE_SOURCE,
-                             G_PARAM_READABLE | G_PARAM_CONSTRUCT_ONLY));
+                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   /**
    * GtdTaskList::task-added:

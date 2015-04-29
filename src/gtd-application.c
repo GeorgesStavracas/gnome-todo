@@ -149,12 +149,6 @@ gtd_application_activate (GApplication *application)
 
   builder = gtk_builder_new_from_resource ("/org/gnome/todo/ui/menus.ui");
 
-  /* window */
-  if (priv->window == NULL)
-    priv->window = gtd_window_new (GTD_APPLICATION (application));
-
-  gtk_widget_show (priv->window);
-
   /* manager */
   if (!priv->manager)
     {
@@ -165,6 +159,12 @@ gtd_application_activate (GApplication *application)
                         G_CALLBACK (gtd_application__manager_notify_ready_cb),
                         application);
     }
+
+  /* window */
+  if (priv->window == NULL)
+    priv->window = gtd_window_new (GTD_APPLICATION (application));
+
+  gtk_widget_show (priv->window);
 
   /* app menu */
   appmenu = (GMenuModel*) gtk_builder_get_object (builder, "appmenu");

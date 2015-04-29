@@ -28,6 +28,8 @@ EXTRA_DIST=                     \
   ui/menus.ui \
   ui/window.ui \
   theme/Adwaita.css \
+  theme/bg.png \
+  theme/bg.svg \
   $(appdata_in_files) \
   $(desktop_in_files) \
   $(gsettingsschema_in_files)

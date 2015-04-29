@@ -24,6 +24,7 @@
 G_BEGIN_DECLS
 
 typedef struct _GtdApplication          GtdApplication;
+typedef struct _GtdManager              GtdManager;
 typedef struct _GtdObject               GtdObject;
 typedef struct _GtdTask                 GtdTask;
 typedef struct _GtdTaskList             GtdTaskList;

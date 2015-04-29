@@ -19,9 +19,10 @@
 #ifndef GTD_TASK_H
 #define GTD_TASK_H
 
-#include <glib-object.h>
-
 #include "gtd-object.h"
+
+#include <glib-object.h>
+#include <libecal/libecal.h>
 
 G_BEGIN_DECLS
 
@@ -29,12 +30,14 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (GtdTask, gtd_task, GTD, TASK, GtdObject)
 
-GtdTask*            gtd_task_new                      (const gchar          *uid);
+GtdTask*            gtd_task_new                      (ECalComponent        *component);
 
 gboolean            gtd_task_get_complete             (GtdTask              *task);
 
 void                gtd_task_set_complete             (GtdTask              *task,
                                                        gboolean              complete);
+
+ECalComponent*      gtd_task_get_component            (GtdTask              *task);
 
 const gchar*        gtd_task_get_description          (GtdTask              *task);
 

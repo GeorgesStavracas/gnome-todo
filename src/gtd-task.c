@@ -20,6 +20,7 @@
 #include "gtd-task-list.h"
 
 #include <glib/gi18n.h>
+#include <libecal/libecal.h>
 
 typedef struct
 {
@@ -29,6 +30,7 @@ typedef struct
   gint             position;
   GDateTime       *dt;
   GtdTaskList     *list;
+  ECalComponent   *component;
 } GtdTaskPrivate;
 
 struct _GtdTask
@@ -45,6 +47,7 @@ enum
 {
   PROP_0,
   PROP_COMPLETE,
+  PROP_COMPONENT,
   PROP_DESCRIPTION,
   PROP_DUE_DATE,
   PROP_LIST,
@@ -84,6 +87,10 @@ gtd_task_get_property (GObject    *object,
       g_value_set_boolean (value, self->priv->complete);
       break;
 
+    case PROP_COMPONENT:
+      g_value_set_object (value, self->priv->component);
+      break;
+
     case PROP_DESCRIPTION:
       g_value_set_string (value, self->priv->description);
       break;
@@ -121,6 +128,10 @@ gtd_task_set_property (GObject      *object,
     {
     case PROP_COMPLETE:
       gtd_task_set_complete (self, g_value_get_boolean (value));
+      break;
+
+    case PROP_COMPONENT:
+      self->priv->component = g_value_get_object (value);
       break;
 
     case PROP_DESCRIPTION:
@@ -171,6 +182,20 @@ gtd_task_class_init (GtdTaskClass *klass)
                               _("Whether the task is marked as completed by the user"),
                               FALSE,
                               G_PARAM_READWRITE));
+
+  /**
+   * GtdTask::component:
+   *
+   * The #ECalComponent of the task.
+   */
+  g_object_class_install_property (
+        object_class,
+        PROP_COMPONENT,
+        g_param_spec_object ("component",
+                              _("Component of the task"),
+                              _("The #ECalComponent this task handles."),
+                              E_TYPE_CAL_COMPONENT,
+                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   /**
    * GtdTask::description:
@@ -253,9 +278,16 @@ gtd_task_init (GtdTask *self)
 }
 
 GtdTask *
-gtd_task_new (const gchar* uid)
+gtd_task_new (ECalComponent *component)
 {
-  return g_object_new (GTD_TYPE_TASK, "uid", uid, NULL);
+  const gchar *uid;
+
+  e_cal_component_get_uid (component, &uid);
+
+  return g_object_new (GTD_TYPE_TASK,
+                       "component", component,
+                       "uid",       uid,
+                       NULL);
 }
 
 /**
@@ -269,9 +301,17 @@ gtd_task_new (const gchar* uid)
 gboolean
 gtd_task_get_complete (GtdTask *task)
 {
-  g_return_if_fail (GTD_IS_TASK (task));
+  g_return_val_if_fail (GTD_IS_TASK (task), FALSE);
 
   return task->priv->complete;
+}
+
+ECalComponent*
+gtd_task_get_component (GtdTask *task)
+{
+  g_return_val_if_fail (GTD_IS_TASK (task), NULL);
+
+  return task->priv->component;
 }
 
 /**

@@ -31,6 +31,7 @@
 
 typedef struct
 {
+  GtkCssProvider *provider;
   GSettings      *settings;
   GtdManager     *manager;
 
@@ -148,6 +149,36 @@ gtd_application_activate (GApplication *application)
   GMenuModel *appmenu;
 
   builder = gtk_builder_new_from_resource ("/org/gnome/todo/ui/menus.ui");
+
+  if (!priv->provider)
+   {
+     GError *error = NULL;
+     GFile* css_file;
+
+     priv->provider = gtk_css_provider_new ();
+     gtk_style_context_add_provider_for_screen (gdk_screen_get_default (),
+                                                GTK_STYLE_PROVIDER (priv->provider),
+                                                GTK_STYLE_PROVIDER_PRIORITY_APPLICATION + 1);
+
+     css_file = g_file_new_for_uri ("resource:///org/gnome/todo/theme/Adwaita.css");
+
+     gtk_css_provider_load_from_file (priv->provider,
+                                      css_file,
+                                      &error);
+     if (error != NULL)
+       {
+         g_warning ("%s: %s: %s",
+                    G_STRFUNC,
+                    _("Error loading CSS from resource"),
+                    error->message);
+
+         g_error_free (error);
+       }
+     else
+       {
+         g_object_unref (css_file);
+       }
+   }
 
   /* manager */
   if (!priv->manager)

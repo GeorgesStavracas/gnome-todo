@@ -16,11 +16,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "gtd-application.h"
+#include "gtd-manager.h"
 #include "gtd-window.h"
+
+#include <glib/gi18n.h>
 
 typedef struct
 {
-  gint nothing;
+  GtdManager                    *manager;
 } GtdWindowPrivate;
 
 struct _GtdWindow
@@ -35,16 +39,16 @@ G_DEFINE_TYPE_WITH_PRIVATE (GtdWindow, gtd_window, GTK_TYPE_APPLICATION_WINDOW)
 
 enum {
   PROP_0,
+  PROP_MANAGER,
   LAST_PROP
 };
-
-static GParamSpec *gParamSpecs [LAST_PROP];
 
 GtkWidget*
 gtd_window_new (GtdApplication *application)
 {
   return g_object_new (GTD_TYPE_WINDOW,
                        "application", application,
+                       "manager",     gtd_application_get_manager (application),
                        NULL);
 }
 
@@ -64,6 +68,10 @@ gtd_window_get_property (GObject    *object,
 
   switch (prop_id)
     {
+    case PROP_MANAGER:
+      g_value_set_object (value, self->priv->manager);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     }
@@ -79,6 +87,10 @@ gtd_window_set_property (GObject      *object,
 
   switch (prop_id)
     {
+    case PROP_MANAGER:
+      self->priv->manager = g_value_get_object (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     }
@@ -94,6 +106,20 @@ gtd_window_class_init (GtdWindowClass *klass)
   object_class->get_property = gtd_window_get_property;
   object_class->set_property = gtd_window_set_property;
 
+  /**
+   * GtdWindow::manager:
+   *
+   * A weak reference to the application's #GtdManager instance.
+   */
+  g_object_class_install_property (
+        object_class,
+        PROP_MANAGER,
+        g_param_spec_object ("manager",
+                             _("Manager of this window's application"),
+                             _("The manager of the window's application"),
+                             GTD_TYPE_MANAGER,
+                             G_PARAM_READABLE | G_PARAM_CONSTRUCT_ONLY));
+
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/window.ui");
 }
 
@@ -101,4 +127,20 @@ static void
 gtd_window_init (GtdWindow *self)
 {
   gtk_widget_init_template (GTK_WIDGET (self));
+}
+
+/**
+ * gtd_window_get_manager:
+ * @window: a #GtdWindow
+ *
+ * Retrieves a weak reference for the @window's #GtdManager.
+ *
+ * Returns: (transfer none): the #GtdManager of @window.
+ */
+GtdManager*
+gtd_window_get_manager (GtdWindow *window)
+{
+  g_return_val_if_fail (GTD_IS_WINDOW (window), NULL);
+
+  return window->priv->manager;
 }

@@ -20,7 +20,7 @@
 #ifndef GTD_WINDOW_H
 #define GTD_WINDOW_H
 
-#include "gtd-application.h"
+#include "gtd-types.h"
 
 #include <gtk/gtk.h>
 
@@ -31,6 +31,8 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GtdWindow, gtd_window, GTD, WINDOW, GtkApplicationWindow)
 
 GtkWidget*                gtd_window_new                  (GtdApplication       *application);
+
+GtdManager*               gtd_window_get_manager          (GtdWindow            *window);
 
 G_END_DECLS
 

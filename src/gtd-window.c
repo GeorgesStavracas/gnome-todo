@@ -18,12 +18,19 @@
 
 #include "gtd-application.h"
 #include "gtd-manager.h"
+#include "gtd-task-list.h"
+#include "gtd-task-list-item.h"
 #include "gtd-window.h"
 
 #include <glib/gi18n.h>
 
 typedef struct
 {
+  GtkFlowBox                    *lists_flowbox;
+
+  /* mode */
+  GtdWindowMode                  mode;
+
   GtdManager                    *manager;
 } GtdWindowPrivate;
 
@@ -42,6 +49,22 @@ enum {
   PROP_MANAGER,
   LAST_PROP
 };
+
+static void
+gtd_window__list_added (GtdManager  *manager,
+                        GtdTaskList *list,
+                        gpointer     user_data)
+{
+  GtdWindowPrivate *priv = GTD_WINDOW (user_data)->priv;
+  GtkWidget *item;
+
+  item = gtd_task_list_item_new (list);
+  gtk_widget_show (item);
+
+  gtk_flow_box_insert (priv->lists_flowbox,
+                       item,
+                       -1);
+}
 
 GtkWidget*
 gtd_window_new (GtdApplication *application)
@@ -89,6 +112,11 @@ gtd_window_set_property (GObject      *object,
     {
     case PROP_MANAGER:
       self->priv->manager = g_value_get_object (value);
+
+      g_signal_connect (self->priv->manager,
+                        "list-added",
+                        G_CALLBACK (gtd_window__list_added),
+                        self);
       break;
 
     default:
@@ -121,6 +149,8 @@ gtd_window_class_init (GtdWindowClass *klass)
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/window.ui");
+
+  gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, lists_flowbox);
 }
 
 static void

@@ -117,11 +117,28 @@ gtd_object_class_init (GtdObjectClass *klass)
                              _("The unique identifier of the object, defined by the backend"),
                              NULL,
                              G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  /**
+   * GtdObject::ready:
+   *
+   * Whether the object is ready or not.
+   */
+  g_object_class_install_property (
+        object_class,
+        PROP_READY,
+        g_param_spec_boolean ("ready",
+                              _("Ready state of the object"),
+                              _("Whether the object is marked as ready or not"),
+                              TRUE,
+                              G_PARAM_READWRITE));
 }
 
 static void
 gtd_object_init (GtdObject *self)
 {
+  GtdObjectPrivate *priv = gtd_object_get_instance_private (self);
+
+  priv->ready = TRUE;
 }
 
 /**

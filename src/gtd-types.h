@@ -30,6 +30,7 @@ typedef struct _GtdManager              GtdManager;
 typedef struct _GtdObject               GtdObject;
 typedef struct _GtdTask                 GtdTask;
 typedef struct _GtdTaskList             GtdTaskList;
+typedef struct _GtdTaskListItem         GtdTaskListItem;
 typedef struct _GtdWindow               GtdWindow;
 
 G_END_DECLS

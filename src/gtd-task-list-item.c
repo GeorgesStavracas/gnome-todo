@@ -45,6 +45,8 @@ struct _GtdTaskListItem
 
 G_DEFINE_TYPE_WITH_PRIVATE (GtdTaskListItem, gtd_task_list_item, GTK_TYPE_FLOW_BOX_CHILD)
 
+#define THUMBNAIL_SIZE            176
+
 enum {
   PROP_0,
   PROP_MODE,
@@ -52,7 +54,71 @@ enum {
   LAST_PROP
 };
 
-static GParamSpec *gParamSpecs [LAST_PROP];
+GdkPixbuf*
+gtd_task_list_item__render_thumbnail (GtdTaskListItem *item)
+{
+  GtkStyleContext *context;
+  cairo_surface_t *surface;
+  cairo_t *cr;
+  GdkPixbuf *pix;
+
+  /* TODO: review size here, maybe not hardcoded */
+  surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+                                        THUMBNAIL_SIZE,
+                                        THUMBNAIL_SIZE);
+  cr = cairo_create (surface);
+
+  /*
+   * Custom themes may apply custom styles here. Use the
+   * gtk_render_background to allow this.
+   */
+  context = gtk_widget_get_style_context (GTK_WIDGET (item));
+
+  gtk_style_context_add_class (context, "thumbnail");
+
+  gtk_render_background (context,
+                         cr,
+                         0.0,
+                         0.0,
+                         THUMBNAIL_SIZE,
+                         THUMBNAIL_SIZE);
+
+  gtk_style_context_remove_class (context, "thumbnail");
+
+  /* Retrieve the pixbuf */
+  pix = gdk_pixbuf_get_from_surface (surface,
+                                     0,
+                                     0,
+                                     THUMBNAIL_SIZE,
+                                     THUMBNAIL_SIZE);
+
+  cairo_surface_destroy (surface);
+  cairo_destroy (cr);
+  return pix;
+}
+
+static void
+gtd_task_list_item__notify_ready (GtdTaskListItem *item,
+                                  GParamSpec      *pspec,
+                                  gpointer         user_data)
+{
+  GtdTaskListItemPrivate *priv = item->priv;
+
+  if (gtd_object_get_ready (GTD_OBJECT (priv->list)))
+    {
+      gtk_image_set_from_icon_name (GTK_IMAGE (priv->icon_image),
+                                    "folder-documents-symbolic",
+                                    GTK_ICON_SIZE_DIALOG);
+    }
+  else
+    {
+      GdkPixbuf *pix = gtd_task_list_item__render_thumbnail (item);
+
+      gtk_image_set_from_pixbuf (GTK_IMAGE (priv->icon_image), pix);
+
+      g_object_unref (pix);
+    }
+}
 
 GtkWidget*
 gtd_task_list_item_new (GtdTaskList *list)
@@ -114,6 +180,12 @@ gtd_task_list_item_set_property (GObject      *object,
     case PROP_TASK_LIST:
       priv->list = g_value_get_object (value);
       gtk_label_set_label (GTK_LABEL (priv->title_label), gtd_task_list_get_name (priv->list));
+
+      g_signal_connect_swapped (priv->list,
+                                "notify::ready",
+                                G_CALLBACK (gtd_task_list_item__notify_ready),
+                                self);
+
       g_object_bind_property (priv->spinner,
                               "visible",
                               priv->list,

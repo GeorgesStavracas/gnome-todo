@@ -141,6 +141,11 @@ gtd_manager__on_client_connected (GObject      *source_object,
       g_object_set_data (G_OBJECT (source), "task-list", list);
       g_hash_table_insert (priv->clients, source, client);
 
+      g_signal_emit (user_data,
+                     signals[LIST_ADDED],
+                     0,
+                     list);
+
       g_debug ("%s: %s (%s)",
                G_STRFUNC,
                _("Task list source successfully connected"),
@@ -190,8 +195,16 @@ gtd_manager__remove_source (GtdManager *manager,
                             ESource    *source)
 {
   GtdManagerPrivate *priv = manager->priv;
+  GtdTaskList *list;
+
+  list = g_object_get_data (G_OBJECT (source), "task-list");
 
   g_hash_table_remove (priv->clients, source);
+
+  g_signal_emit (manager,
+                 signals[LIST_REMOVED],
+                 0,
+                 list);
 }
 
 static void
@@ -325,6 +338,57 @@ gtd_manager_class_init (GtdManagerClass *klass)
                             _("The read-only source registry loaded and owned by the manager"),
                             E_TYPE_SOURCE_REGISTRY,
                             G_PARAM_READABLE));
+
+  /**
+   * GtdManager::list-added:
+   *
+   * The ::list-added signal is emmited after a #GtdTaskList
+   * is connected.
+   */
+  signals[LIST_ADDED] = g_signal_new ("list-added",
+                                      GTD_TYPE_MANAGER,
+                                      G_SIGNAL_RUN_LAST,
+                                      0,
+                                      NULL,
+                                      NULL,
+                                      NULL,
+                                      G_TYPE_NONE,
+                                      1,
+                                      GTD_TYPE_TASK_LIST);
+
+/**
+   * GtdManager::list-changed:
+   *
+   * The ::list-changed signal is emmited after a #GtdTaskList
+   * has any of it's properties changed.
+   */
+  signals[LIST_CHANGED] = g_signal_new ("list-changed",
+                                        GTD_TYPE_MANAGER,
+                                        G_SIGNAL_RUN_LAST,
+                                        0,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        G_TYPE_NONE,
+                                        1,
+                                        GTD_TYPE_TASK_LIST);
+
+  /**
+   * GtdManager::list-removed:
+   *
+   * The ::list-removed signal is emmited after a #GtdTaskList
+   * is disconnected.
+   */
+  signals[LIST_REMOVED] = g_signal_new ("list-removed",
+                                        GTD_TYPE_MANAGER,
+                                        G_SIGNAL_RUN_LAST,
+                                        0,
+                                        NULL,
+                                        NULL,
+                                        NULL,
+                                        G_TYPE_NONE,
+                                        1,
+                                        GTD_TYPE_TASK_LIST);
 }
 
 static void

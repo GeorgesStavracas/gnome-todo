@@ -19,6 +19,8 @@
 #ifndef GTD_APPLICATION_H
 #define GTD_APPLICATION_H
 
+#include "gtd-types.h"
+
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
@@ -27,7 +29,9 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (GtdApplication, gtd_application, GTD, APPLICATION, GtkApplication)
 
-GtdApplication *gtd_application_new (void);
+GtdApplication*                 gtd_application_new                     (void);
+
+GtdManager*                     gtd_application_get_manager             (GtdApplication         *application);
 
 G_END_DECLS
 

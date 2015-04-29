@@ -210,3 +210,11 @@ gtd_application_init (GtdApplication *self)
 
   self->priv = priv;
 }
+
+GtdManager*
+gtd_application_get_manager (GtdApplication *app)
+{
+  g_return_val_if_fail (GTD_IS_APPLICATION (app), NULL);
+
+  return app->priv->manager;
+}

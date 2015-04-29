@@ -33,9 +33,6 @@ gnome_todo_LDADD = \
 	-lm \
 	$(GNOME_TODO_LIBS)
 
-
-EXTRA_DIST = $(ui_DATA)
-
 resource_files = $(shell glib-compile-resources --sourcedir=$(top_srcdir)/data --generate-dependencies $(top_srcdir)/data/todo.gresource.xml)
 gtd-resources.c: $(top_srcdir)/data/todo.gresource.xml $(resource_files)
 	glib-compile-resources --target=$@ --sourcedir=$(top_srcdir)/data --generate-source --c-name todo $(top_srcdir)/data/todo.gresource.xml

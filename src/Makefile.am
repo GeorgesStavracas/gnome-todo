@@ -24,6 +24,8 @@ gnome_todo_SOURCES = \
 	gtd-task.h \
 	gtd-task-list.c \
 	gtd-task-list.h \
+	gtd-task-list-item.c \
+	gtd-task-list-item.h \
 	gtd-types.h \
 	gtd-window.c \
 	gtd-window.h \

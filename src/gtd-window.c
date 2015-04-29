@@ -118,7 +118,7 @@ gtd_window_class_init (GtdWindowClass *klass)
                              _("Manager of this window's application"),
                              _("The manager of the window's application"),
                              GTD_TYPE_MANAGER,
-                             G_PARAM_READABLE | G_PARAM_CONSTRUCT_ONLY));
+                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/window.ui");
 }

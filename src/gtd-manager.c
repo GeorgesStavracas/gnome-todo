@@ -17,6 +17,8 @@
  */
 
 #include "gtd-manager.h"
+#include "gtd-task.h"
+#include "gtd-task-list.h"
 
 #include <glib/gi18n.h>
 #include <libecal/libecal.h>
@@ -62,6 +64,45 @@ enum
 static guint signals[NUM_SIGNALS] = { 0, };
 
 static void
+gtd_manager__fill_task_list (GObject      *client,
+                             GAsyncResult *result,
+                             gpointer      user_data)
+{
+  GSList *component_list;
+  GError *error = NULL;
+
+  e_cal_client_get_object_list_as_comps_finish (E_CAL_CLIENT (client),
+                                                result,
+                                                &component_list,
+                                                &error);
+
+  if (!error)
+    {
+      GSList *l;
+
+      for (l = component_list; l != NULL; l = l->next)
+        {
+          GtdTask *task = gtd_task_new (l->data);
+          gtd_task_set_list (task, GTD_TASK_LIST (user_data));
+
+          gtd_task_list_save_task (GTD_TASK_LIST (user_data), task);
+        }
+
+      e_cal_client_free_ecalcomp_slist (component_list);
+    }
+  else
+    {
+      g_warning ("%s: %s: %s",
+                 G_STRFUNC,
+                 _("Error fetching tasks from list"),
+                 error->message);
+
+      g_error_free (error);
+      return;
+    }
+}
+
+static void
 gtd_manager__on_client_connected (GObject      *source_object,
                                   GAsyncResult *result,
                                   gpointer      user_data)
@@ -81,6 +122,23 @@ gtd_manager__on_client_connected (GObject      *source_object,
 
   if (!error)
     {
+      GtdTaskList *list;
+
+      /* creates a new task list */
+      list = gtd_task_list_new (source);
+
+      /* it's not ready until we fetch the list of tasks from client */
+      gtd_object_set_ready (GTD_OBJECT (list), FALSE);
+
+      /* asyncronously fetch the task list */
+      e_cal_client_get_object_list_as_comps (client,
+                                             "(contains? \"summary\" \"*\")",
+                                             NULL,
+                                             (GAsyncReadyCallback) gtd_manager__fill_task_list,
+                                             list);
+
+
+      g_object_set_data (G_OBJECT (source), "task-list", list);
       g_hash_table_insert (priv->clients, source, client);
 
       g_debug ("%s: %s (%s)",

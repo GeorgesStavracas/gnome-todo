@@ -23,13 +23,15 @@
 
 #include "gtd-object.h"
 
+#include <libecal/libecal.h>
+
 G_BEGIN_DECLS
 
 #define GTD_TYPE_TASK_LIST (gtd_task_list_get_type())
 
 G_DECLARE_FINAL_TYPE (GtdTaskList, gtd_task_list, GTD, TASK_LIST, GtdObject)
 
-GtdTaskList*            gtd_task_list_new                       (const gchar            *uid);
+GtdTaskList*            gtd_task_list_new                       (ESource                *source);
 
 const gchar*            gtd_task_list_get_name                  (GtdTaskList            *list);
 
@@ -46,6 +48,9 @@ void                    gtd_task_list_remove_task               (GtdTaskList    
 
 gboolean                gtd_task_list_contains                  (GtdTaskList            *list,
                                                                  GtdTask                *task);
+
+ESource*                gtd_task_list_get_source                (GtdTaskList            *list);
+
 G_END_DECLS
 
 #endif /* GTD_TASK_LIST_H */

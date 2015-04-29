@@ -20,11 +20,13 @@
 #include "gtd-task-list.h"
 
 #include <glib/gi18n.h>
+#include <libecal/libecal.h>
 
 typedef struct
 {
   gchar               *name;
   GList               *tasks;
+  ESource             *source;
 } GtdTaskListPrivate;
 
 struct _GtdTaskList
@@ -51,6 +53,7 @@ enum
 {
   PROP_0,
   PROP_NAME,
+  PROP_SOURCE,
   LAST_PROP
 };
 
@@ -127,6 +130,20 @@ gtd_task_list_class_init (GtdTaskListClass *klass)
                              G_PARAM_READWRITE));
 
   /**
+   * GtdTaskList::source:
+   *
+   * The parent source of the list.
+   */
+  g_object_class_install_property (
+        object_class,
+        PROP_SOURCE,
+        g_param_spec_object ("source",
+                             _("Source of the list"),
+                             _("The parent source that handles the list"),
+                             E_TYPE_SOURCE,
+                             G_PARAM_READABLE | G_PARAM_CONSTRUCT_ONLY));
+
+  /**
    * GtdTaskList::task-added:
    *
    * The ::task-added signal is emmited after a #GtdTask
@@ -194,9 +211,12 @@ gtd_task_list_init (GtdTaskList *self)
  * Returns: (transfer full): the new #GtdTaskList
  */
 GtdTaskList *
-gtd_task_list_new (const gchar *uid)
+gtd_task_list_new (ESource *source)
 {
-  return g_object_new (GTD_TYPE_TASK_LIST, "uid", uid, NULL);
+  return g_object_new (GTD_TYPE_TASK_LIST,
+                       "source", source,
+                       "uid", e_source_get_uid (source),
+                       NULL);
 }
 
 /**
@@ -325,4 +345,20 @@ gtd_task_list_contains (GtdTaskList *list,
   g_assert (GTD_IS_TASK (task));
 
   return (g_list_find (list->priv->tasks, task) != NULL);
+}
+
+/**
+ * gtd_task_list_get_source:
+ * @list: a #GtdTaskList
+ *
+ * Retrieves the #ESource that handles @list.
+ *
+ * Returns: (transfer none): the internal #ESource of @list
+ */
+ESource*
+gtd_task_list_get_source (GtdTaskList *list)
+{
+  g_return_val_if_fail (GTD_IS_TASK_LIST (list), NULL);
+
+  return list->priv->source;
 }

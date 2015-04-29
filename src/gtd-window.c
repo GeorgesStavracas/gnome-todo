@@ -126,6 +126,8 @@ gtd_window_class_init (GtdWindowClass *klass)
 static void
 gtd_window_init (GtdWindow *self)
 {
+  self->priv = gtd_window_get_instance_private (self);
+
   gtk_widget_init_template (GTK_WIDGET (self));
 }
 

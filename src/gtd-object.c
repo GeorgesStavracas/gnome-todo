@@ -22,7 +22,7 @@
 
 typedef struct
 {
-  gboolean       loaded;
+  gboolean       ready;
   gchar         *uid;
 } GtdObjectPrivate;
 
@@ -31,7 +31,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (GtdObject, gtd_object, G_TYPE_OBJECT)
 enum
 {
   PROP_0,
-  PROP_LOADED,
+  PROP_READY,
   PROP_UID,
   LAST_PROP
 };
@@ -59,8 +59,8 @@ gtd_object_get_property (GObject    *object,
 
   switch (prop_id)
     {
-    case PROP_LOADED:
-      g_value_set_boolean (value, priv->loaded);
+    case PROP_READY:
+      g_value_set_boolean (value, priv->ready);
       break;
 
     case PROP_UID:
@@ -82,8 +82,8 @@ gtd_object_set_property (GObject      *object,
 
   switch (prop_id)
     {
-    case PROP_LOADED:
-      gtd_object_set_loaded (self, g_value_get_boolean (value));
+    case PROP_READY:
+      gtd_object_set_ready (self, g_value_get_boolean (value));
       break;
 
     case PROP_UID:
@@ -189,16 +189,15 @@ gtd_object_set_uid (GtdObject   *object,
 }
 
 /**
- * gtd_object_get_loaded:
+ * gtd_object_get_ready:
  * @object: a #GtdObject
  *
- * Whether @object is loaded by the #GtdBackend.
+ * Whether @object is ready.
  *
- * Returns: %TRUE if @object is completely loaded by the backend,
- * %FALSE otherwise.
+ * Returns: %TRUE if @object is ready, %FALSE otherwise.
  */
 gboolean
-gtd_object_get_loaded (GtdObject *object)
+gtd_object_get_ready (GtdObject *object)
 {
   GtdObjectPrivate *priv;
 
@@ -206,20 +205,19 @@ gtd_object_get_loaded (GtdObject *object)
 
   priv = gtd_object_get_instance_private (object);
 
-  return priv->loaded;
+  return priv->ready;
 }
 
 /**
- * gtd_object_set_loaded:
+ * gtd_object_set_ready:
  *
- * Sets the GtdObject::loaded property to @loaded. Only the
- * #GtdBackend should do it.
+ * Sets the GtdObject::ready property to @ready.
  *
  * Returns:
  */
 void
-gtd_object_set_loaded (GtdObject *object,
-                       gboolean   loaded)
+gtd_object_set_ready (GtdObject *object,
+                      gboolean   ready)
 {
   GtdObjectPrivate *priv;
 
@@ -227,10 +225,10 @@ gtd_object_set_loaded (GtdObject *object,
 
   priv = gtd_object_get_instance_private (object);
 
-  if (priv->loaded != loaded)
+  if (priv->ready != ready)
     {
-      priv->loaded = loaded;
+      priv->ready = ready;
 
-      g_object_notify (G_OBJECT (object), "loaded");
+      g_object_notify (G_OBJECT (object), "ready");
     }
 }

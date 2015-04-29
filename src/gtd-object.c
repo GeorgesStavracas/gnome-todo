@@ -201,7 +201,7 @@ gtd_object_get_ready (GtdObject *object)
 {
   GtdObjectPrivate *priv;
 
-  g_return_val_if_fail (GTD_IS_OBJECT (object), NULL);
+  g_return_val_if_fail (GTD_IS_OBJECT (object), FALSE);
 
   priv = gtd_object_get_instance_private (object);
 

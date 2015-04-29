@@ -21,6 +21,7 @@
 #endif
 
 #include "gtd-application.h"
+#include "gtd-manager.h"
 #include "gtd-window.h"
 
 #include <glib.h>
@@ -28,10 +29,10 @@
 #include <gio/gio.h>
 #include <glib/gi18n.h>
 
-
 typedef struct
 {
   GSettings      *settings;
+  GtdManager     *manager;
 
   GtkWidget      *window;
 } GtdApplicationPrivate;
@@ -59,6 +60,23 @@ static const GActionEntry gtd_application_entries[] = {
   { "about",  gtd_application_show_about },
   { "quit",   gtd_application_quit }
 };
+
+static void
+gtd_application__manager_notify_ready_cb (GtdManager *manager,
+                                          GParamSpec *pspec,
+                                          gpointer    user_data)
+{
+  if (!gtd_object_get_ready (GTD_OBJECT (manager)))
+    {
+      g_message ("%s: manager not ready", G_STRFUNC);
+      g_application_mark_busy (G_APPLICATION (user_data));
+    }
+  else
+    {
+      g_message ("%s: manager ready", G_STRFUNC);
+      g_application_unmark_busy (G_APPLICATION (user_data));
+    }
+}
 
 static void
 gtd_application_show_about (GSimpleAction *simple,
@@ -142,6 +160,17 @@ gtd_application_activate (GApplication *application)
     priv->window = gtd_window_new (GTD_APPLICATION (application));
 
   gtk_widget_show (priv->window);
+
+  /* manager */
+  if (!priv->manager)
+    {
+      priv->manager = gtd_manager_new ();
+
+      g_signal_connect (priv->manager,
+                        "notify::ready",
+                        G_CALLBACK (gtd_application__manager_notify_ready_cb),
+                        application);
+    }
 
   /* app menu */
   appmenu = (GMenuModel*) gtk_builder_get_object (builder, "appmenu");

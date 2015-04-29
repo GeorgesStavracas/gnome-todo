@@ -4,5 +4,7 @@
     <file compressed="true" preprocess="xml-stripblanks">ui/menus.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/window.ui</file>
     <file compressed="true">theme/Adwaita.css</file>
+    <file compressed="true">theme/bg.png</file>
+    <file compressed="true">theme/bg.svg</file>
   </gresource>
 </gresources>

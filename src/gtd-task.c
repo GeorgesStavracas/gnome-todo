@@ -21,6 +21,7 @@
 
 #include <glib/gi18n.h>
 #include <libecal/libecal.h>
+#include <libical/icaltime.h>
 
 typedef struct
 {
@@ -343,7 +344,48 @@ gtd_task_set_complete (GtdTask  *task,
 const gchar*
 gtd_task_get_description (GtdTask *task)
 {
+  GSList *text_list;
+  GSList *l;
+  gchar *desc = NULL;
+
   g_return_val_if_fail (GTD_IS_TASK (task), NULL);
+
+  /* concatenates the multiple descriptions a task may have */
+  e_cal_component_get_description_list (task->priv->component, &text_list);
+  for (l = text_list; l != NULL; l = l->next)
+    {
+      if (l->data != NULL)
+        {
+          ECalComponentText *text;
+          gchar *carrier;
+          text = l->data;
+
+          if (desc != NULL)
+            {
+              carrier = g_strconcat (desc,
+                                     "\n",
+                                     text->value,
+                                     NULL);
+              g_free (desc);
+              desc = carrier;
+            }
+          else
+            {
+              desc = g_strdup (text->value);
+            }
+        }
+    }
+
+  if (g_strcmp0 (task->priv->description, desc) != 0)
+    {
+      if (task->priv->description)
+        g_free (task->priv->description);
+
+      task->priv->description = g_strdup (desc);
+    }
+
+  g_free (desc);
+  e_cal_component_free_text_list (text_list);
 
   return task->priv->description;
 }
@@ -367,10 +409,19 @@ gtd_task_set_description (GtdTask     *task,
 
   if (g_strcmp0 (task->priv->description, description) != 0)
     {
+      GSList note;
+      ECalComponentText text;
+
       if (task->priv->description)
         g_free (task->priv->description);
 
       task->priv->description = g_strdup (description);
+      text.value = task->priv->description;
+      text.altrep = NULL;
+      note.data = &text;
+      note.next = NULL;
+
+      e_cal_component_set_description_list (task->priv->component, &note);
 
       g_object_notify (G_OBJECT (task), "description");
     }

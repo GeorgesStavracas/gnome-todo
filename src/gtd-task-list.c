@@ -24,7 +24,6 @@
 
 typedef struct
 {
-  gchar               *name;
   GList               *tasks;
   ESource             *source;
 } GtdTaskListPrivate;
@@ -62,9 +61,6 @@ gtd_task_list_finalize (GObject *object)
 {
   GtdTaskList *self = (GtdTaskList*) object;
 
-  if (self->priv->name)
-    g_free (self->priv->name);
-
   G_OBJECT_CLASS (gtd_task_list_parent_class)->finalize (object);
 }
 
@@ -79,7 +75,7 @@ gtd_task_list_get_property (GObject    *object,
   switch (prop_id)
     {
     case PROP_NAME:
-      g_value_set_string (value, self->priv->name);
+      g_value_set_string (value, e_source_get_display_name (self->priv->source));
       break;
 
     case PROP_SOURCE:
@@ -241,7 +237,7 @@ gtd_task_list_get_name (GtdTaskList *list)
 {
   g_return_val_if_fail (GTD_IS_TASK_LIST (list), NULL);
 
-  return list->priv->name;
+  return e_source_get_display_name (list->priv->source);
 }
 
 /**
@@ -257,12 +253,9 @@ gtd_task_list_set_name (GtdTaskList *list,
 {
   g_assert (GTD_IS_TASK_LIST (list));
 
-  if (g_strcmp0 (list->priv->name, name) != 0)
+  if (g_strcmp0 (e_source_get_display_name (list->priv->source), name) != 0)
     {
-      if (list->priv->name)
-        g_free (list->priv->name);
-
-      list->priv->name = g_strdup (name);
+      e_source_set_display_name (list->priv->source, name);
 
       g_object_notify (G_OBJECT (list), "name");
     }

@@ -85,6 +85,8 @@ gtd_manager__fill_task_list (GObject      *client,
           GtdTask *task = gtd_task_new (l->data);
           gtd_task_set_list (task, GTD_TASK_LIST (user_data));
 
+          g_message ("Task added");
+
           gtd_task_list_save_task (GTD_TASK_LIST (user_data), task);
         }
 
@@ -132,7 +134,7 @@ gtd_manager__on_client_connected (GObject      *source_object,
 
       /* asyncronously fetch the task list */
       e_cal_client_get_object_list_as_comps (client,
-                                             "(contains? \"summary\" \"*\")",
+                                             "contains? \"any\" \"*\"",
                                              NULL,
                                              (GAsyncReadyCallback) gtd_manager__fill_task_list,
                                              list);

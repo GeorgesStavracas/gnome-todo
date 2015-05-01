@@ -27,8 +27,10 @@
 typedef struct
 {
   GtkButton                     *back_button;
+  GtkHeaderBar                  *headerbar;
   GtkFlowBox                    *lists_flowbox;
   GtkStack                      *main_stack;
+  GtkStackSwitcher              *stack_switcher;
 
   /* mode */
   GtdWindowMode                  mode;
@@ -61,6 +63,7 @@ gtd_window__back_button_clicked (GtkButton *button,
   g_return_if_fail (GTD_IS_WINDOW (user_data));
 
   gtk_stack_set_visible_child_name (priv->main_stack, "overview");
+  gtk_header_bar_set_custom_title (priv->headerbar, GTK_WIDGET (priv->stack_switcher));
   gtk_widget_hide (GTK_WIDGET (priv->back_button));
 }
 
@@ -70,11 +73,16 @@ gtd_window__list_selected (GtkFlowBox      *flowbox,
                            gpointer         user_data)
 {
   GtdWindowPrivate *priv = GTD_WINDOW (user_data)->priv;
+  GtdTaskList *list;
 
   g_return_if_fail (GTD_IS_WINDOW (user_data));
   g_return_if_fail (GTD_IS_TASK_LIST_ITEM (item));
 
+  list = gtd_task_list_item_get_list (item);
+
   gtk_stack_set_visible_child_name (priv->main_stack, "tasks");
+  gtk_header_bar_set_title (priv->headerbar, gtd_task_list_get_name (list));
+  gtk_header_bar_set_custom_title (priv->headerbar, NULL);
   gtk_widget_show (GTK_WIDGET (priv->back_button));
 }
 
@@ -179,8 +187,10 @@ gtd_window_class_init (GtdWindowClass *klass)
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/window.ui");
 
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, back_button);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, headerbar);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, lists_flowbox);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, main_stack);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, stack_switcher);
 
   gtk_widget_class_bind_template_callback (widget_class, gtd_window__back_button_clicked);
   gtk_widget_class_bind_template_callback (widget_class, gtd_window__list_selected);

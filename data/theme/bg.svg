@@ -15,7 +15,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="list-bg.svg"
+   sodipodi:docname="bg.svg"
    inkscape:export-filename="/home/georges/Documentos/Projetos/gnome-todo/data/theme/bg.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
@@ -53,6 +53,38 @@
          result="composite2"
          id="feComposite4184" />
     </filter>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Drop Shadow"
+       id="filter4337">
+      <feFlood
+         flood-opacity="0.376471"
+         flood-color="rgb(0,0,0)"
+         result="flood"
+         id="feFlood4339" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite4341" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="3"
+         result="blur"
+         id="feGaussianBlur4343" />
+      <feOffset
+         dx="0"
+         dy="0"
+         result="offset"
+         id="feOffset4345" />
+      <feComposite
+         in="SourceGraphic"
+         in2="offset"
+         operator="over"
+         result="composite2"
+         id="feComposite4347" />
+    </filter>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -61,9 +93,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.1539135"
-     inkscape:cx="85.54362"
-     inkscape:cy="81.58508"
+     inkscape:zoom="1.6569084"
+     inkscape:cx="112.56759"
+     inkscape:cy="47.940488"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -81,7 +113,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
         <dc:date>April 29, 2015</dc:date>
         <dc:creator>
           <cc:Agent>
@@ -117,11 +149,18 @@
      id="layer1"
      transform="translate(0,-860.36216)">
     <rect
-       style="fill:#fafafa;fill-opacity:1;stroke:#c3c3c2;stroke-width:0.99995476;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;filter:url(#filter4174)"
-       id="rect4136"
-       width="127.00004"
-       height="175.00005"
-       x="32.499977"
-       y="868.86212" />
+       y="868.85461"
+       x="32.492443"
+       height="175.01512"
+       width="127.01512"
+       id="rect4142"
+       style="fill:#fafafa;fill-opacity:1;stroke:#c3c3c2;stroke-width:0.98488104;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       style="fill:#fafafa;fill-opacity:1;stroke:#c3c3c2;stroke-width:0.98488104;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;filter:url(#filter4337)"
+       id="rect4140"
+       width="127.01512"
+       height="175.01512"
+       x="32.492443"
+       y="868.85461" />
   </g>
 </svg>

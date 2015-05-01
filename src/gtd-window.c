@@ -53,6 +53,18 @@ enum {
 };
 
 static void
+gtd_window__back_button_clicked (GtkButton *button,
+                                 gpointer   user_data)
+{
+  GtdWindowPrivate *priv = GTD_WINDOW (user_data)->priv;
+
+  g_return_if_fail (GTD_IS_WINDOW (user_data));
+
+  gtk_stack_set_visible_child_name (priv->main_stack, "overview");
+  gtk_widget_hide (GTK_WIDGET (priv->back_button));
+}
+
+static void
 gtd_window__list_selected (GtkFlowBox      *flowbox,
                            GtdTaskListItem *item,
                            gpointer         user_data)
@@ -170,6 +182,7 @@ gtd_window_class_init (GtdWindowClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, lists_flowbox);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, main_stack);
 
+  gtk_widget_class_bind_template_callback (widget_class, gtd_window__back_button_clicked);
   gtk_widget_class_bind_template_callback (widget_class, gtd_window__list_selected);
 }
 

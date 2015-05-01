@@ -294,6 +294,7 @@
           <object class="GtkButton" id="back_button">
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <signal name="clicked" handler="gtd_window__back_button_clicked" object="GtdWindow" swapped="no" />
             <child>
               <object class="GtkImage" id="back_button_image">
                 <property name="visible">True</property>

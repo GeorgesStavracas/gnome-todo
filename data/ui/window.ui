@@ -78,147 +78,210 @@
     <property name="default_width">800</property>
     <property name="default_height">600</property>
     <child>
-      <object class="GtkOverlay" id="overlay">
+      <object class="GtkStack" id="main_stack">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="transition_type">crossfade</property>
         <child>
-          <object class="GtkBox" id="main_box">
+          <object class="GtkOverlay" id="overlay">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="hexpand">True</property>
-            <property name="vexpand">True</property>
-            <property name="orientation">vertical</property>
             <child>
-              <object class="GtkStack" id="stack">
+              <object class="GtkBox" id="main_box">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
                 <property name="hexpand">True</property>
                 <property name="vexpand">True</property>
-                <property name="transition_duration">250</property>
-                <property name="transition_type">crossfade</property>
+                <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkScrolledWindow" id="lists_scrolled_window">
+                  <object class="GtkStack" id="stack">
                     <property name="visible">True</property>
-                    <property name="can_focus">True</property>
+                    <property name="can_focus">False</property>
                     <property name="hexpand">True</property>
                     <property name="vexpand">True</property>
-                    <property name="hscrollbar_policy">never</property>
+                    <property name="transition_duration">250</property>
+                    <property name="transition_type">crossfade</property>
                     <child>
-                      <object class="GtkViewport" id="lists_viewport">
+                      <object class="GtkScrolledWindow" id="lists_scrolled_window">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="shadow_type">none</property>
+                        <property name="can_focus">True</property>
+                        <property name="hexpand">True</property>
+                        <property name="vexpand">True</property>
+                        <property name="hscrollbar_policy">never</property>
                         <child>
-                          <object class="GtkFrame" id="lists_frame">
+                          <object class="GtkViewport" id="lists_viewport">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="label_xalign">0</property>
                             <property name="shadow_type">none</property>
                             <child>
-                              <object class="GtkFlowBox" id="lists_flowbox">
+                              <object class="GtkFrame" id="lists_frame">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="halign">start</property>
-                                <property name="valign">start</property>
+                                <property name="label_xalign">0</property>
+                                <property name="shadow_type">none</property>
+                                <child>
+                                  <object class="GtkFlowBox" id="lists_flowbox">
+                                    <property name="visible">True</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="halign">start</property>
+                                    <property name="valign">start</property>
+                                    <property name="hexpand">True</property>
+                                    <property name="vexpand">True</property>
+                                    <property name="border_width">12</property>
+                                    <property name="homogeneous">True</property>
+                                    <property name="column_spacing">12</property>
+                                    <property name="row_spacing">12</property>
+                                    <property name="max_children_per_line">100</property>
+                                    <property name="selection_mode">none</property>
+                                    <signal name="child-activated" handler="gtd_window__list_selected" object="GtdWindow" swapped="no" />
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="name">lists</property>
+                        <property name="title" translatable="yes">Lists</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkScrolledWindow" id="today_scrolled_window">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="hexpand">True</property>
+                        <property name="vexpand">True</property>
+                        <property name="hscrollbar_policy">never</property>
+                        <child>
+                          <object class="GtkViewport" id="today_viewport">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="shadow_type">none</property>
+                            <child>
+                              <object class="GtkListBox" id="today_listbox">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
                                 <property name="hexpand">True</property>
                                 <property name="vexpand">True</property>
-                                <property name="border_width">12</property>
-                                <property name="homogeneous">True</property>
-                                <property name="column_spacing">12</property>
-                                <property name="row_spacing">12</property>
-                                <property name="max_children_per_line">100</property>
                                 <property name="selection_mode">none</property>
                               </object>
                             </child>
                           </object>
                         </child>
                       </object>
+                      <packing>
+                        <property name="name">today</property>
+                        <property name="title" translatable="yes">Today</property>
+                        <property name="position">1</property>
+                      </packing>
                     </child>
-                  </object>
-                  <packing>
-                    <property name="name">lists</property>
-                    <property name="title" translatable="yes">Lists</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkScrolledWindow" id="today_scrolled_window">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="hexpand">True</property>
-                    <property name="vexpand">True</property>
-                    <property name="hscrollbar_policy">never</property>
                     <child>
-                      <object class="GtkViewport" id="today_viewport">
+                      <object class="GtkScrolledWindow" id="scheduled_scrolled_window">
                         <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="shadow_type">none</property>
+                        <property name="can_focus">True</property>
+                        <property name="hscrollbar_policy">never</property>
                         <child>
-                          <object class="GtkListBox" id="today_listbox">
+                          <object class="GtkViewport" id="scheduled_viewport">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="hexpand">True</property>
-                            <property name="vexpand">True</property>
-                            <property name="selection_mode">none</property>
+                            <property name="shadow_type">none</property>
+                            <child>
+                              <object class="GtkListBox" id="scheduled_listbox">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="selection_mode">none</property>
+                              </object>
+                            </child>
                           </object>
                         </child>
                       </object>
+                      <packing>
+                        <property name="name">scheduled</property>
+                        <property name="title" translatable="yes">Scheduled</property>
+                        <property name="position">2</property>
+                      </packing>
                     </child>
                   </object>
                   <packing>
-                    <property name="name">today</property>
-                    <property name="title" translatable="yes">Today</property>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkActionBar" id="action_bar">
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkButton" id="rename_button">
+                        <property name="label" translatable="yes">Rename</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                      </object>
+                      <packing>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="remove_button">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">True</property>
+                        <child>
+                          <object class="GtkImage" id="trash_image">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="icon_name">user-trash-symbolic</property>
+                          </object>
+                        </child>
+                        <style>
+                          <class name="destructive-action"/>
+                        </style>
+                      </object>
+                      <packing>
+                        <property name="pack_type">end</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
-                <child>
-                  <object class="GtkScrolledWindow" id="scheduled_scrolled_window">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="hscrollbar_policy">never</property>
-                    <child>
-                      <object class="GtkViewport" id="scheduled_viewport">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="shadow_type">none</property>
-                        <child>
-                          <object class="GtkListBox" id="scheduled_listbox">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="selection_mode">none</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="name">scheduled</property>
-                    <property name="title" translatable="yes">Scheduled</property>
-                    <property name="position">2</property>
-                  </packing>
-                </child>
               </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkActionBar" id="action_bar">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="hexpand">True</property>
-                <child>
-                  <placeholder/>
-                </child>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
             </child>
           </object>
+          <packing>
+            <property name="name">overview</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkScrolledWindow" id="tasks_scrolled_window">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="hscrollbar_policy">never</property>
+            <child>
+              <object class="GtkViewport" id="task_viewport">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="shadow_type">none</property>
+                <child>
+                  <object class="GtkListBox" id="tasks_listbox">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="selection_mode">none</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="name">tasks</property>
+            <property name="position">1</property>
+          </packing>
         </child>
       </object>
     </child>
@@ -266,6 +329,23 @@
           </object>
         </child>
         <child>
+          <object class="GtkButton" id="share_button">
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <child>
+              <object class="GtkImage" id="share_button_image">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="icon_name">send-to-symbolic</property>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="pack_type">end</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkToggleButton" id="select_button">
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
@@ -297,23 +377,6 @@
           <packing>
             <property name="pack_type">end</property>
             <property name="position">3</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkButton" id="share_button">
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <child>
-              <object class="GtkImage" id="share_button_image">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="icon_name">send-to-symbolic</property>
-              </object>
-            </child>
-          </object>
-          <packing>
-            <property name="pack_type">end</property>
-            <property name="position">2</property>
           </packing>
         </child>
       </object>

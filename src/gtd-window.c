@@ -26,7 +26,9 @@
 
 typedef struct
 {
+  GtkButton                     *back_button;
   GtkFlowBox                    *lists_flowbox;
+  GtkStack                      *main_stack;
 
   /* mode */
   GtdWindowMode                  mode;
@@ -49,6 +51,20 @@ enum {
   PROP_MANAGER,
   LAST_PROP
 };
+
+static void
+gtd_window__list_selected (GtkFlowBox      *flowbox,
+                           GtdTaskListItem *item,
+                           gpointer         user_data)
+{
+  GtdWindowPrivate *priv = GTD_WINDOW (user_data)->priv;
+
+  g_return_if_fail (GTD_IS_WINDOW (user_data));
+  g_return_if_fail (GTD_IS_TASK_LIST_ITEM (item));
+
+  gtk_stack_set_visible_child_name (priv->main_stack, "tasks");
+  gtk_widget_show (GTK_WIDGET (priv->back_button));
+}
 
 static void
 gtd_window__list_added (GtdManager  *manager,
@@ -150,7 +166,11 @@ gtd_window_class_init (GtdWindowClass *klass)
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/window.ui");
 
+  gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, back_button);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, lists_flowbox);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, main_stack);
+
+  gtk_widget_class_bind_template_callback (widget_class, gtd_window__list_selected);
 }
 
 static void

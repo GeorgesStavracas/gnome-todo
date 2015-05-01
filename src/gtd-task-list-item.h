@@ -31,6 +31,8 @@ G_DECLARE_FINAL_TYPE (GtdTaskListItem, gtd_task_list_item, GTD, TASK_LIST_ITEM, 
 
 GtkWidget*              gtd_task_list_item_new                (GtdTaskList          *list);
 
+GtdTaskList*            gtd_task_list_item_get_list           (GtdTaskListItem      *item);
+
 G_END_DECLS
 
 #endif /* GTD_TASK_LIST_ITEM_H */

@@ -255,3 +255,19 @@ gtd_task_list_item_init (GtdTaskListItem *self)
 
   gtk_widget_init_template (GTK_WIDGET (self));
 }
+
+/**
+ * gtd_task_list_item_get_list:
+ * @item: a #GtdTaskListItem
+ *
+ * Retrieves the internal #GtdTaskList from @item.
+ *
+ * Returns: (transfer none): the internal #GtdTaskList from @item
+ */
+GtdTaskList*
+gtd_task_list_item_get_list (GtdTaskListItem *item)
+{
+  g_return_val_if_fail (GTD_IS_TASK_LIST_ITEM (item), NULL);
+
+  return item->priv->list;
+}

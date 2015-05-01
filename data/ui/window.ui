@@ -306,7 +306,7 @@
         </child>
         <child>
           <object class="GtkMenuButton" id="new_list_button">
-            <property name="visible">True</property>
+            <property name="visible" bind-source="back_button" bind-property="visible" bind-flags="invert-boolean|sync-create"/>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
             <property name="popover">new_list_popover</property>

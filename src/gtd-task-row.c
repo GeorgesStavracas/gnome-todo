@@ -87,6 +87,10 @@ gtd_task_row__grab_focus (GtkWidget *widget)
       gtk_stack_set_visible_child_name (priv->new_task_stack, "entry");
       gtk_widget_grab_focus (GTK_WIDGET (priv->new_task_entry));
     }
+  else
+    {
+      g_signal_emit (widget, signals[ENTER], 0);
+    }
 }
 
 static gboolean
@@ -95,13 +99,19 @@ gtd_task_row__key_press_event (GtkWidget   *row,
 {
   GtdTaskRowPrivate *priv = GTD_TASK_ROW (row)->priv;
 
-  if (priv->new_task_mode &&
-      event->keyval == GDK_KEY_Escape && // Esc is pressed
+  if (event->keyval == GDK_KEY_Escape && // Esc is pressed
       !(event->state & (GDK_SHIFT_MASK|GDK_CONTROL_MASK))) // No modifiers together
     {
-      gtk_stack_set_visible_child_name (priv->new_task_stack, "label");
-      gtk_entry_set_text (priv->new_task_entry, "");
-      return TRUE;
+      if (priv->new_task_mode)
+        {
+          gtk_stack_set_visible_child_name (priv->new_task_stack, "label");
+          gtk_entry_set_text (priv->new_task_entry, "");
+          return TRUE;
+        }
+      else
+        {
+          g_signal_emit (row, signals[EXIT], 0);
+        }
     }
 
   return FALSE;

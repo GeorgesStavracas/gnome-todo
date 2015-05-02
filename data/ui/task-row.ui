@@ -201,6 +201,7 @@
                   <object class="GtkEntry" id="new_task_entry">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
+                    <signal name="activate" handler="gtd_task_row__entry_activated" object="GtdTaskRow" swapped="no" />
                   </object>
                   <packing>
                     <property name="name">entry</property>

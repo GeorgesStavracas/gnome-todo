@@ -118,6 +118,26 @@ gtd_task_row__key_press_event (GtkWidget   *row,
 }
 
 static void
+gtd_task_row__entry_activated (GtkEntry *entry,
+                               gpointer  user_data)
+{
+  GtdTaskRowPrivate *priv = GTD_TASK_ROW (user_data)->priv;
+
+  g_return_if_fail (GTD_IS_TASK_ROW (user_data));
+  g_return_if_fail (GTK_IS_ENTRY (entry));
+
+  if (entry == priv->new_task_entry)
+    {
+      /* Cannot create empty tasks */
+      if (gtk_entry_get_text_length (priv->new_task_entry) == 0)
+        return;
+
+      gtk_entry_set_text (priv->new_task_entry, "");
+      g_signal_emit (user_data, signals[ACTIVATED], 0);
+    }
+}
+
+static void
 gtd_task_row_finalize (GObject *object)
 {
   GtdTaskRow *self = (GtdTaskRow *)object;
@@ -267,6 +287,8 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, task_list_label);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, title_entry);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, title_label);
+
+  gtk_widget_class_bind_template_callback (widget_class, gtd_task_row__entry_activated);
 }
 
 static void

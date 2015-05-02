@@ -70,6 +70,44 @@ gtd_task_finalize (GObject *object)
   G_OBJECT_CLASS (gtd_task_parent_class)->finalize (object);
 }
 
+static const gchar*
+gtd_task__get_uid (GtdObject *object)
+{
+  GtdTaskPrivate *priv = GTD_TASK (object)->priv;
+  const gchar *uid;
+
+  g_return_val_if_fail (GTD_IS_TASK (object), NULL);
+
+  if (priv->component)
+    e_cal_component_get_uid (priv->component, &uid);
+  else
+    uid = NULL;
+
+  return uid;
+}
+
+static void
+gtd_task__set_uid (GtdObject   *object,
+                   const gchar *uid)
+{
+  GtdTaskPrivate *priv = GTD_TASK (object)->priv;
+  const gchar *current_uid;
+
+  g_return_if_fail (GTD_IS_TASK (object));
+
+  if (!priv->component)
+    return;
+
+  e_cal_component_get_uid (priv->component, &current_uid);
+
+  if (g_strcmp0 (current_uid, uid) != 0)
+    {
+      e_cal_component_set_uid (priv->component, uid);
+
+      g_object_notify (G_OBJECT (object), "uid");
+    }
+}
+
 static void
 gtd_task_get_property (GObject    *object,
                        guint       prop_id,
@@ -167,10 +205,14 @@ static void
 gtd_task_class_init (GtdTaskClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GtdObjectClass *obj_class = GTD_OBJECT_CLASS (klass);
 
   object_class->finalize = gtd_task_finalize;
   object_class->get_property = gtd_task_get_property;
   object_class->set_property = gtd_task_set_property;
+
+  obj_class->get_uid = gtd_task__get_uid;
+  obj_class->set_uid = gtd_task__set_uid;
 
   /**
    * GtdTask::complete:

@@ -228,6 +228,7 @@
           <object class="GtdListView" id="list_view">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="readonly">False</property>
           </object>
           <packing>
             <property name="name">tasks</property>

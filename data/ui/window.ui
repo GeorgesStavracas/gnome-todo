@@ -147,28 +147,9 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkScrolledWindow" id="today_scrolled_window">
+                      <object class="GtdListView" id="today_list_view">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="hexpand">True</property>
-                        <property name="vexpand">True</property>
-                        <property name="hscrollbar_policy">never</property>
-                        <child>
-                          <object class="GtkViewport" id="today_viewport">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="shadow_type">none</property>
-                            <child>
-                              <object class="GtkListBox" id="today_listbox">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="hexpand">True</property>
-                                <property name="vexpand">True</property>
-                                <property name="selection_mode">none</property>
-                              </object>
-                            </child>
-                          </object>
-                        </child>
                       </object>
                       <packing>
                         <property name="name">today</property>
@@ -177,24 +158,9 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkScrolledWindow" id="scheduled_scrolled_window">
+                      <object class="GtdListView" id="scheduled_list_view">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
-                        <property name="hscrollbar_policy">never</property>
-                        <child>
-                          <object class="GtkViewport" id="scheduled_viewport">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="shadow_type">none</property>
-                            <child>
-                              <object class="GtkListBox" id="scheduled_listbox">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="selection_mode">none</property>
-                              </object>
-                            </child>
-                          </object>
-                        </child>
                       </object>
                       <packing>
                         <property name="name">scheduled</property>
@@ -259,24 +225,9 @@
           </packing>
         </child>
         <child>
-          <object class="GtkScrolledWindow" id="tasks_scrolled_window">
+          <object class="GtdListView" id="list_view">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="hscrollbar_policy">never</property>
-            <child>
-              <object class="GtkViewport" id="task_viewport">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="shadow_type">none</property>
-                <child>
-                  <object class="GtkListBox" id="tasks_listbox">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="selection_mode">none</property>
-                  </object>
-                </child>
-              </object>
-            </child>
           </object>
           <packing>
             <property name="name">tasks</property>

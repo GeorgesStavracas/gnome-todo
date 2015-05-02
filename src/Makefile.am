@@ -16,6 +16,8 @@ gnome_todo_SOURCES = \
 	gtd-application.c \
 	gtd-application.h \
 	gtd-enums.h \
+	gtd-list-view.c \
+	gtd-list-view.h \
 	gtd-manager.c \
 	gtd-manager.h \
 	gtd-object.c \
@@ -26,6 +28,8 @@ gnome_todo_SOURCES = \
 	gtd-task-list.h \
 	gtd-task-list-item.c \
 	gtd-task-list-item.h \
+	gtd-task-row.c \
+	gtd-task-row.h \
 	gtd-types.h \
 	gtd-window.c \
 	gtd-window.h \

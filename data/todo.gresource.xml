@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
   <gresource prefix="/org/gnome/todo">
+    <file compressed="true" preprocess="xml-stripblanks">ui/list-view.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/menus.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/task-list-item.ui</file>
+    <file compressed="true" preprocess="xml-stripblanks">ui/task-row.ui</file>
     <file compressed="true" preprocess="xml-stripblanks">ui/window.ui</file>
     <file compressed="true">theme/Adwaita.css</file>
     <file compressed="true">theme/bg.png</file>

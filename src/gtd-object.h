@@ -32,6 +32,11 @@ G_DECLARE_DERIVABLE_TYPE (GtdObject, gtd_object, GTD, OBJECT, GObject)
 struct _GtdObjectClass
 {
   GObjectClass parent;
+
+  /* public */
+  const gchar*      (* get_uid)        (GtdObject        *object);
+  void              (* set_uid)        (GtdObject        *object,
+                                        const gchar      *uid);
 };
 
 GtdObject*              gtd_object_new                    (const gchar        *uid);

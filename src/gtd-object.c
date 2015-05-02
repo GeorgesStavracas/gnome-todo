@@ -64,7 +64,7 @@ gtd_object_get_property (GObject    *object,
       break;
 
     case PROP_UID:
-      g_value_set_string (value, priv->uid);
+      g_value_set_string (value, GTD_OBJECT_GET_CLASS (self)->get_uid (self));
       break;
 
     default:
@@ -87,7 +87,7 @@ gtd_object_set_property (GObject      *object,
       break;
 
     case PROP_UID:
-      gtd_object_set_uid (self, g_value_get_string (value));
+      GTD_OBJECT_GET_CLASS (self)->set_uid (self, g_value_get_string (value));
       break;
 
     default:
@@ -99,6 +99,9 @@ static void
 gtd_object_class_init (GtdObjectClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+  klass->get_uid = gtd_object_get_uid;
+  klass->set_uid = gtd_object_set_uid;
 
   object_class->finalize = gtd_object_finalize;
   object_class->get_property = gtd_object_get_property;

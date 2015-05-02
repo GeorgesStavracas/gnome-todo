@@ -52,11 +52,20 @@ struct _GtdTaskRow
 G_DEFINE_TYPE_WITH_PRIVATE (GtdTaskRow, gtd_task_row, GTK_TYPE_LIST_BOX_ROW)
 
 enum {
+  ENTER,
+  EXIT,
+  ACTIVATE,
+  NUM_SIGNALS
+};
+
+enum {
   PROP_0,
   PROP_NEW_TASK_MODE,
   PROP_TASK,
   LAST_PROP
 };
+
+static guint signals[NUM_SIGNALS] = { 0, };
 
 GtkWidget*
 gtd_task_row_new (GtdTask *task)
@@ -193,6 +202,51 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
                                _("The task that this row represents"),
                                GTD_TYPE_TASK,
                                G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  /**
+   * GtdTaskRow::enter:
+   *
+   * Emitted when the row is focused and in the editing state.
+   */
+  signals[ENTER] = g_signal_new ("enter",
+                                 GTD_TYPE_TASK_ROW,
+                                 G_SIGNAL_RUN_LAST,
+                                 0,
+                                 NULL,
+                                 NULL,
+                                 NULL,
+                                 G_TYPE_NONE,
+                                 0);
+
+  /**
+   * GtdTaskRow::exit:
+   *
+   * Emitted when the row is unfocused and leaves the editing state.
+   */
+  signals[EXIT] = g_signal_new ("exit",
+                                GTD_TYPE_TASK_ROW,
+                                G_SIGNAL_RUN_LAST,
+                                0,
+                                NULL,
+                                NULL,
+                                NULL,
+                                G_TYPE_NONE,
+                                0);
+
+  /**
+   * GtdTaskRow::activate:
+   *
+   * Emitted when the row wants to apply the changes.
+   */
+  signals[ACTIVATE] = g_signal_new ("activate",
+                                    GTD_TYPE_TASK_ROW,
+                                    G_SIGNAL_RUN_LAST,
+                                    0,
+                                    NULL,
+                                    NULL,
+                                    NULL,
+                                    G_TYPE_NONE,
+                                    0);
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/task-row.ui");
 

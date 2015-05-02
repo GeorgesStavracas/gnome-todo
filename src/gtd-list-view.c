@@ -148,6 +148,8 @@ gtd_list_view_class_init (GtdListViewClass *klass)
                               G_PARAM_READWRITE));
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/list-view.ui");
+
+  gtk_widget_class_bind_template_child_private (widget_class, GtdListView, listbox);
 }
 
 static void
@@ -156,6 +158,7 @@ gtd_list_view_init (GtdListView *self)
   self->priv = gtd_list_view_get_instance_private (self);
   self->priv->readonly = TRUE;
   self->priv->new_task_row = GTD_TASK_ROW (gtd_task_row_new (NULL));
+  gtd_task_row_set_new_task_mode (self->priv->new_task_row, TRUE);
 
   gtk_widget_init_template (GTK_WIDGET (self));
 }

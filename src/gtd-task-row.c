@@ -54,7 +54,7 @@ G_DEFINE_TYPE_WITH_PRIVATE (GtdTaskRow, gtd_task_row, GTK_TYPE_LIST_BOX_ROW)
 enum {
   ENTER,
   EXIT,
-  ACTIVATE,
+  ACTIVATED,
   NUM_SIGNALS
 };
 
@@ -248,15 +248,15 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
    *
    * Emitted when the row wants to apply the changes.
    */
-  signals[ACTIVATE] = g_signal_new ("activate",
-                                    GTD_TYPE_TASK_ROW,
-                                    G_SIGNAL_RUN_LAST,
-                                    0,
-                                    NULL,
-                                    NULL,
-                                    NULL,
-                                    G_TYPE_NONE,
-                                    0);
+  signals[ACTIVATED] = g_signal_new ("activated",
+                                     GTD_TYPE_TASK_ROW,
+                                     G_SIGNAL_RUN_LAST,
+                                     0,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     G_TYPE_NONE,
+                                     0);
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/task-row.ui");
 

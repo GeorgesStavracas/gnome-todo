@@ -144,7 +144,7 @@ gtd_list_view_class_init (GtdListViewClass *klass)
         g_param_spec_boolean ("readonly",
                               _("Whether the list is readonly"),
                               _("Whether the list is readonly, i.e. doesn't show the New Task row, or not"),
-                              FALSE,
+                              TRUE,
                               G_PARAM_READWRITE));
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/list-view.ui");
@@ -154,7 +154,7 @@ static void
 gtd_list_view_init (GtdListView *self)
 {
   self->priv = gtd_list_view_get_instance_private (self);
-
+  self->priv->readonly = TRUE;
   self->priv->new_task_row = GTD_TASK_ROW (gtd_task_row_new (NULL));
 
   gtk_widget_init_template (GTK_WIDGET (self));

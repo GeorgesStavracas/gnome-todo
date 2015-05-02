@@ -75,12 +75,13 @@ gtd_task_row_new (GtdTask *task)
                        NULL);
 }
 
-static void
-gtd_task_row__grab_focus (GtkWidget *widget)
+static gboolean
+gtd_task_row__focus_in (GtkWidget *widget,
+                        GdkEventFocus *event)
 {
   GtdTaskRowPrivate *priv = GTD_TASK_ROW (widget)->priv;
 
-  g_return_if_fail (GTD_IS_TASK_ROW (widget));
+  g_return_val_if_fail (GTD_IS_TASK_ROW (widget), FALSE);
 
   if (priv->new_task_mode)
     {
@@ -91,6 +92,8 @@ gtd_task_row__grab_focus (GtkWidget *widget)
     {
       g_signal_emit (widget, signals[ENTER], 0);
     }
+
+  return FALSE;
 }
 
 static gboolean
@@ -202,7 +205,7 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
   object_class->get_property = gtd_task_row_get_property;
   object_class->set_property = gtd_task_row_set_property;
 
-  widget_class->grab_focus = gtd_task_row__grab_focus;
+  widget_class->focus_in_event = gtd_task_row__focus_in;
   widget_class->key_press_event = gtd_task_row__key_press_event;
 
   /**

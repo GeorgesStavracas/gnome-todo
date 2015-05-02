@@ -80,6 +80,24 @@ gtd_task_row__grab_focus (GtkWidget *widget)
     }
 }
 
+static gboolean
+gtd_task_row__key_press_event (GtkWidget   *row,
+                               GdkEventKey *event)
+{
+  GtdTaskRowPrivate *priv = GTD_TASK_ROW (row)->priv;
+
+  if (priv->new_task_mode &&
+      event->keyval == GDK_KEY_Escape && // Esc is pressed
+      !(event->state & (GDK_SHIFT_MASK|GDK_CONTROL_MASK))) // No modifiers together
+    {
+      gtk_stack_set_visible_child_name (priv->new_task_stack, "label");
+      gtk_entry_set_text (priv->new_task_entry, "");
+      return TRUE;
+    }
+
+  return FALSE;
+}
+
 static void
 gtd_task_row_finalize (GObject *object)
 {
@@ -146,6 +164,7 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
   object_class->set_property = gtd_task_row_set_property;
 
   widget_class->grab_focus = gtd_task_row__grab_focus;
+  widget_class->key_press_event = gtd_task_row__key_press_event;
 
   /**
    * GtdTaskRow::new-task-mode:

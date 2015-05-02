@@ -157,6 +157,7 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/task-row.ui");
 
+  gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, stack);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, task_date_label);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, task_list_label);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, title_entry);

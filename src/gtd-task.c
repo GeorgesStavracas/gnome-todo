@@ -129,6 +129,13 @@ gtd_task_set_property (GObject      *object,
 
     case PROP_COMPONENT:
       self->priv->component = g_value_get_object (value);
+
+      if (!self->priv->component)
+        {
+          self->priv->component = e_cal_component_new ();
+          e_cal_component_set_new_vtype (self->priv->component, E_CAL_COMPONENT_TODO);
+        }
+
       break;
 
     case PROP_DESCRIPTION:

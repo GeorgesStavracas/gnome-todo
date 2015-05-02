@@ -286,7 +286,10 @@ gtd_task_new (ECalComponent *component)
 {
   const gchar *uid;
 
-  e_cal_component_get_uid (component, &uid);
+  if (component)
+    e_cal_component_get_uid (component, &uid);
+  else
+    uid = NULL;
 
   return g_object_new (GTD_TYPE_TASK,
                        "component", component,

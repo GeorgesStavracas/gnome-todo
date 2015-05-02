@@ -17,6 +17,7 @@
  */
 
 #include "gtd-application.h"
+#include "gtd-list-view.h"
 #include "gtd-manager.h"
 #include "gtd-task-list.h"
 #include "gtd-task-list-item.h"
@@ -31,6 +32,7 @@ typedef struct
   GtkFlowBox                    *lists_flowbox;
   GtkStack                      *main_stack;
   GtkStackSwitcher              *stack_switcher;
+  GtdListView                   *list_view;
 
   /* mode */
   GtdWindowMode                  mode;
@@ -83,6 +85,7 @@ gtd_window__list_selected (GtkFlowBox      *flowbox,
   gtk_stack_set_visible_child_name (priv->main_stack, "tasks");
   gtk_header_bar_set_title (priv->headerbar, gtd_task_list_get_name (list));
   gtk_header_bar_set_custom_title (priv->headerbar, NULL);
+  gtd_list_view_set_task_list (priv->list_view, list);
   gtk_widget_show (GTK_WIDGET (priv->back_button));
 }
 
@@ -189,6 +192,7 @@ gtd_window_class_init (GtdWindowClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, back_button);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, headerbar);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, lists_flowbox);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, list_view);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, main_stack);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, stack_switcher);
 

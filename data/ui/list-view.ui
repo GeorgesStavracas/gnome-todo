@@ -24,6 +24,9 @@
                 <property name="valign">start</property>
                 <property name="hexpand">True</property>
                 <property name="selection_mode">none</property>
+                <style>
+                  <class name="transparent" />
+                </style>
               </object>
             </child>
           </object>

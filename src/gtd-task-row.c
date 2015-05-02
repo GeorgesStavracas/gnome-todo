@@ -26,6 +26,10 @@ typedef struct
 {
   GtkStack                  *stack;
 
+  /* new task widgets */
+  GtkEntry                  *new_task_entry;
+  GtkStack                  *new_task_stack;
+
   /* task widgets */
   GtkEntry                  *title_entry;
   GtkLabel                  *task_date_label;
@@ -60,6 +64,20 @@ gtd_task_row_new (GtdTask *task)
   return g_object_new (GTD_TYPE_TASK_ROW,
                        "task", task,
                        NULL);
+}
+
+static void
+gtd_task_row__grab_focus (GtkWidget *widget)
+{
+  GtdTaskRowPrivate *priv = GTD_TASK_ROW (widget)->priv;
+
+  g_return_if_fail (GTD_IS_TASK_ROW (widget));
+
+  if (priv->new_task_mode)
+    {
+      gtk_stack_set_visible_child_name (priv->new_task_stack, "entry");
+      gtk_widget_grab_focus (GTK_WIDGET (priv->new_task_entry));
+    }
 }
 
 static void
@@ -127,6 +145,8 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
   object_class->get_property = gtd_task_row_get_property;
   object_class->set_property = gtd_task_row_set_property;
 
+  widget_class->grab_focus = gtd_task_row__grab_focus;
+
   /**
    * GtdTaskRow::new-task-mode:
    *
@@ -158,6 +178,8 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/task-row.ui");
 
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, stack);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, new_task_entry);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, new_task_stack);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, task_date_label);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, task_list_label);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, title_entry);

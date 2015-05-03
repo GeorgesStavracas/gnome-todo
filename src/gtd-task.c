@@ -25,7 +25,6 @@
 
 typedef struct
 {
-  gboolean         complete;
   gchar           *description;
   gint             position;
   GtdTaskList     *list;
@@ -150,7 +149,7 @@ gtd_task_get_property (GObject    *object,
   switch (prop_id)
     {
     case PROP_COMPLETE:
-      g_value_set_boolean (value, self->priv->complete);
+      g_value_set_boolean (value, gtd_task_get_complete (self));
       break;
 
     case PROP_COMPONENT:
@@ -384,9 +383,17 @@ gtd_task_new (ECalComponent *component)
 gboolean
 gtd_task_get_complete (GtdTask *task)
 {
+  icaltimetype *dt;
+  gboolean completed;
+
   g_return_val_if_fail (GTD_IS_TASK (task), FALSE);
 
-  return task->priv->complete;
+  e_cal_component_get_completed (task->priv->component, &dt);
+  completed = (dt != NULL);
+
+  e_cal_component_free_icaltimetype (dt);
+
+  return completed;
 }
 
 ECalComponent*
@@ -412,9 +419,29 @@ gtd_task_set_complete (GtdTask  *task,
 {
   g_assert (GTD_IS_TASK (task));
 
-  if (task->priv->complete != complete)
+  if (gtd_task_get_complete (task) != complete)
     {
-      task->priv->complete = complete;
+      GDateTime *now;
+      icaltimetype *dt;
+
+      now = g_date_time_new_now_local ();
+
+      dt = g_new0 (icaltimetype, 1);
+      dt->year = g_date_time_get_year (now);
+      dt->month = g_date_time_get_month (now);
+      dt->day = g_date_time_get_day_of_month (now);
+      dt->hour = g_date_time_get_hour (now);
+      dt->minute = g_date_time_get_minute (now);
+      dt->second = g_date_time_get_seconds (now);
+      dt->is_date = (dt->hour == 0 &&
+                     dt->minute == 0 &&
+                     dt->second == 0);
+      dt->zone = icaltimezone_get_builtin_timezone_from_tzid (g_date_time_get_timezone_abbreviation (now));
+
+      e_cal_component_set_completed (task->priv->component, dt);
+
+      e_cal_component_free_icaltimetype (dt);
+
       g_object_notify (G_OBJECT (task), "complete");
     }
 }
@@ -600,6 +627,8 @@ gtd_task_set_due_date (GtdTask   *task,
 
       e_cal_component_set_dtend (task->priv->component, &comp_dt);
 
+      if (comp_dt.value)
+        e_cal_component_free_icaltimetype (comp_dt.value);
       if (comp_dt.tzid)
         g_free ((gchar*) comp_dt.tzid);
     }

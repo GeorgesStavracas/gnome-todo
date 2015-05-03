@@ -28,6 +28,7 @@ typedef struct
   GtkStack                  *stack;
 
   /* new task widgets */
+  GtkStack                  *done_check;
   GtkEntry                  *new_task_entry;
   GtkStack                  *new_task_stack;
 
@@ -335,6 +336,7 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/task-row.ui");
 
+  gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, done_check);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, stack);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, new_task_entry);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, new_task_stack);
@@ -444,6 +446,11 @@ gtd_task_row_set_task (GtdTaskRow *row,
         {
           gtk_entry_set_text (row->priv->title_entry, gtd_task_get_title (task));
           gtk_label_set_label (row->priv->task_list_label, gtd_task_list_get_name (gtd_task_get_list (task)));
+          g_object_bind_property (task,
+                                  "complete",
+                                  row->priv->done_check,
+                                  "active",
+                                  G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
         }
 
       g_object_notify (G_OBJECT (row), "task");

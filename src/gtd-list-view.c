@@ -56,6 +56,57 @@ enum {
 };
 
 static void
+gtd_list_view__clear_list (GtdListView *view)
+{
+  GList *children;
+  GList *l;
+
+  g_return_if_fail (GTD_IS_LIST_VIEW (view));
+
+  children = gtk_container_get_children (GTK_CONTAINER (view->priv->listbox));
+
+  for (l = children; l != NULL; l = l->next)
+    {
+      if (l->data != view->priv->new_task_row)
+        gtk_widget_destroy (l->data);
+    }
+
+  g_list_free (children);
+}
+
+static void
+gtd_list_view__add_task (GtdListView *view,
+                         GtdTask     *task)
+{
+  GtdListViewPrivate *priv = view->priv;
+  GtkWidget *new_row;
+
+  g_return_if_fail (GTD_IS_LIST_VIEW (view));
+  g_return_if_fail (GTD_IS_TASK (task));
+
+  new_row = gtd_task_row_new (task);
+
+  gtk_list_box_insert (priv->listbox,
+                       new_row,
+                       0);
+}
+
+static void
+gtd_list_view__task_added (GtdTaskList *list,
+                           GtdTask     *task,
+                           gpointer     user_data)
+{
+  GtdListViewPrivate *priv = GTD_LIST_VIEW (user_data)->priv;
+
+  g_return_if_fail (GTD_IS_LIST_VIEW (user_data));
+  g_return_if_fail (GTD_IS_TASK_LIST (list));
+  g_return_if_fail (GTD_IS_TASK (task));
+
+  /* Add the new task to the list */
+  gtd_list_view__add_task (GTD_LIST_VIEW (user_data), task);
+}
+
+static void
 gtd_list_view__create_task (GtdTaskRow *row,
                             GtdTask    *task,
                             gpointer    user_data)
@@ -382,9 +433,44 @@ void
 gtd_list_view_set_task_list (GtdListView *view,
                              GtdTaskList *list)
 {
+  GtdListViewPrivate *priv = view->priv;
+
   g_return_if_fail (GTD_IS_LIST_VIEW (view));
   g_return_if_fail (GTD_IS_TASK_LIST (list));
 
-  if (view->priv->task_list != list)
-    view->priv->task_list = list;
+  if (priv->task_list != list)
+    {
+      GList *task_list;
+      GList *l;
+
+      /*
+       * Disconnect the old GtdTaskList signals.
+       */
+      if (priv->task_list)
+        {
+          g_signal_handlers_disconnect_by_func (priv->task_list,
+                                                gtd_list_view__task_added,
+                                                view);
+        }
+
+      priv->task_list = list;
+
+      /* clear previous tasks */
+      gtd_list_view__clear_list (view);
+
+      /* Add the tasks from the list */
+      task_list = gtd_task_list_get_tasks (list);
+
+      for (l = task_list; l != NULL; l = l->next)
+        {
+          gtd_list_view__add_task (view, l->data);
+        }
+
+      g_list_free (task_list);
+
+      g_signal_connect (list,
+                        "task-added",
+                        G_CALLBACK (gtd_list_view__task_added),
+                        view);
+    }
 }

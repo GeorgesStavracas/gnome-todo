@@ -169,6 +169,7 @@ gtd_task_set_property (GObject      *object,
       break;
 
     case PROP_COMPONENT:
+      self->priv->component = g_value_get_object (value);
 
       if (!self->priv->component)
         {
@@ -177,7 +178,6 @@ gtd_task_set_property (GObject      *object,
         }
       else
         {
-          self->priv->component = g_value_get_object (value);
           g_object_ref (self->priv->component);
         }
 
@@ -342,7 +342,6 @@ gtd_task_new (ECalComponent *component)
 
   return g_object_new (GTD_TYPE_TASK,
                        "component", component,
-                       "uid",       uid,
                        NULL);
 }
 

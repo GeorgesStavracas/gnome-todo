@@ -391,7 +391,8 @@ gtd_task_get_complete (GtdTask *task)
   e_cal_component_get_completed (task->priv->component, &dt);
   completed = (dt != NULL);
 
-  e_cal_component_free_icaltimetype (dt);
+  if (dt)
+    e_cal_component_free_icaltimetype (dt);
 
   return completed;
 }

@@ -32,7 +32,6 @@ typedef struct
 
   /* task widgets */
   GtkEntry                  *title_entry;
-  GtkLabel                  *task_date_label;
   GtkLabel                  *task_list_label;
   GtkLabel                  *title_label;
 
@@ -338,7 +337,6 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, stack);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, new_task_entry);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, new_task_stack);
-  gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, task_date_label);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, task_list_label);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, title_entry);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, title_label);

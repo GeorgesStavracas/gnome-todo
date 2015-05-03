@@ -59,8 +59,7 @@
                     <property name="can_focus">True</property>
                   </object>
                   <packing>
-                    <property name="name">page0</property>
-                    <property name="title" translatable="yes">page0</property>
+                    <property name="name">title</property>
                     <property name="position">1</property>
                   </packing>
                 </child>
@@ -138,17 +137,6 @@
                 <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">3</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkLabel" id="task_date_label">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">4</property>
               </packing>
             </child>
           </object>

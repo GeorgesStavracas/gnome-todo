@@ -134,7 +134,7 @@ gtd_manager__on_client_connected (GObject      *source_object,
 
       /* asyncronously fetch the task list */
       e_cal_client_get_object_list_as_comps (client,
-                                             "contains? \"any\" \"*\"",
+                                             "contains? \"any\" \"\"",
                                              NULL,
                                              (GAsyncReadyCallback) gtd_manager__fill_task_list,
                                              list);

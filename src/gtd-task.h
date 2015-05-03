@@ -64,6 +64,10 @@ const gchar*        gtd_task_get_title                (GtdTask              *tas
 void                gtd_task_set_title                (GtdTask              *task,
                                                        const gchar          *title);
 
+void                gtd_task_abort                    (GtdTask              *task);
+
+void                gtd_task_save                     (GtdTask              *task);
+
 G_END_DECLS
 
 #endif /* GTD_TASK_H */

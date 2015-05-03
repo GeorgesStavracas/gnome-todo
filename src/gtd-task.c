@@ -684,3 +684,38 @@ gtd_task_set_title (GtdTask     *task,
       g_object_notify (G_OBJECT (task), "title");
     }
 }
+
+/**
+ * gtd_task_abort:
+ * @task: a #GtdTask
+ *
+ * Cancels any editing made on @task after the latest
+ * call of @gtd_task_save.
+ *
+ * Returns:
+ */
+void
+gtd_task_abort (GtdTask *task)
+{
+  g_return_if_fail (GTD_IS_TASK (task));
+  g_return_if_fail (E_IS_CAL_COMPONENT (task->priv->component));
+
+  e_cal_component_abort_sequence (task->priv->component);
+}
+
+/**
+ * gtd_task_save:
+ * @task: a #GtdTask
+ *
+ * Save any changes made on @task.
+ *
+ * Returns:
+ */
+void
+gtd_task_save (GtdTask *task)
+{
+  g_return_if_fail (GTD_IS_TASK (task));
+  g_return_if_fail (E_IS_CAL_COMPONENT (task->priv->component));
+
+  e_cal_component_commit_sequence (task->priv->component);
+}

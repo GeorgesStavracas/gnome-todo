@@ -69,6 +69,13 @@ gtd_list_view__create_task (GtdTaskRow *row,
   g_return_if_fail (!priv->readonly);
   g_return_if_fail (priv->task_list);
 
+  /*
+   * Newly created tasks are not aware of
+   * their parent lists.
+   */
+  gtd_task_set_list (task, priv->task_list);
+
+  /* Add the new task to the list */
   new_row = gtd_task_row_new (task);
 
   gtk_list_box_insert (priv->listbox,

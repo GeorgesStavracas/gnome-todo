@@ -649,9 +649,11 @@ gtd_task_set_position (GtdTask *task,
 const gchar*
 gtd_task_get_title (GtdTask *task)
 {
+  GtdTaskPrivate *priv = task->priv;
   ECalComponentText summary;
 
   g_return_val_if_fail (GTD_IS_TASK (task), NULL);
+  g_return_val_if_fail (E_IS_CAL_COMPONENT (priv->component), NULL);
 
   e_cal_component_get_summary (task->priv->component, &summary);
 

@@ -168,10 +168,11 @@ gtd_task_row__entry_activated (GtkEntry *entry,
       if (gtk_entry_get_text_length (priv->new_task_entry) == 0)
         return;
 
-      gtk_entry_set_text (priv->new_task_entry, "");
       new_task = gtd_task_row__create_task_for_name (gtk_entry_get_text (priv->new_task_entry));
 
       g_signal_emit (user_data, signals[CREATE_TASK], 0, new_task);
+
+      gtk_entry_set_text (priv->new_task_entry, "");
     }
 }
 

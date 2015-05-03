@@ -151,6 +151,7 @@ gtd_window_set_property (GObject      *object,
     {
     case PROP_MANAGER:
       self->priv->manager = g_value_get_object (value);
+      gtd_list_view_set_manager (self->priv->list_view, self->priv->manager);
 
       g_signal_connect (self->priv->manager,
                         "list-added",

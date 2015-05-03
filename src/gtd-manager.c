@@ -82,10 +82,10 @@ gtd_manager__fill_task_list (GObject      *client,
 
       for (l = component_list; l != NULL; l = l->next)
         {
-          GtdTask *task = gtd_task_new (l->data);
-          gtd_task_set_list (task, GTD_TASK_LIST (user_data));
+          GtdTask *task;
 
-          g_message ("Task added");
+          task = gtd_task_new (l->data);
+          gtd_task_set_list (task, GTD_TASK_LIST (user_data));
 
           gtd_task_list_save_task (GTD_TASK_LIST (user_data), task);
         }

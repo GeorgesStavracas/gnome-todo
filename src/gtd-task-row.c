@@ -55,6 +55,7 @@ enum {
   ENTER,
   EXIT,
   ACTIVATED,
+  CREATE_TASK,
   NUM_SIGNALS
 };
 
@@ -297,6 +298,22 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
                                      NULL,
                                      G_TYPE_NONE,
                                      0);
+
+  /**
+   * GtdTaskRow::create-task:
+   *
+   * Emitted when the row wants the parent widget to create a new task.
+   */
+  signals[CREATE_TASK] = g_signal_new ("create-task",
+                                       GTD_TYPE_TASK_ROW,
+                                       G_SIGNAL_RUN_LAST,
+                                       0,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       G_TYPE_NONE,
+                                       1,
+                                       GTD_TYPE_TASK);
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/task-row.ui");
 

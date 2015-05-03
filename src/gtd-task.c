@@ -28,7 +28,6 @@ typedef struct
   gboolean         complete;
   gchar           *description;
   gint             position;
-  GDateTime       *dt;
   GtdTaskList     *list;
   ECalComponent   *component;
 } GtdTaskPrivate;
@@ -56,6 +55,38 @@ enum
   LAST_PROP
 };
 
+GDateTime*
+gtd_task__convert_icaltime (const icaltimetype *date,
+                            const gchar        *tz)
+{
+  GDateTime *dt;
+  gboolean is_date = date->is_date ? TRUE : FALSE;
+
+  g_return_val_if_fail (date, NULL);
+
+  if (tz)
+    {
+      dt = g_date_time_new (g_time_zone_new (tz),
+                            date->year,
+                            date->month,
+                            date->day,
+                            is_date ? date->hour : 0,
+                            is_date ? date->minute : 0,
+                            is_date ? date->second : 0.0);
+    }
+  else
+    {
+      dt = g_date_time_new_local (date->year,
+                                  date->month,
+                                  date->day,
+                                  is_date ? date->hour : 0,
+                                  is_date ? date->minute : 0,
+                                  is_date ? date->second : 0.0);
+    }
+
+  return dt;
+}
+
 static void
 gtd_task_finalize (GObject *object)
 {
@@ -63,9 +94,6 @@ gtd_task_finalize (GObject *object)
 
   if (self->priv->description)
     g_free (self->priv->description);
-
-  if (self->priv->dt)
-    g_date_time_unref (self->priv->dt);
 
   if (self->priv->component)
     g_object_unref (self->priv->component);
@@ -134,7 +162,7 @@ gtd_task_get_property (GObject    *object,
       break;
 
     case PROP_DUE_DATE:
-      g_value_set_boxed (value, self->priv->dt);
+      g_value_set_boxed (value, gtd_task_get_due_date (self));
       break;
 
     case PROP_LIST:
@@ -499,12 +527,16 @@ gtd_task_set_description (GtdTask     *task,
 GDateTime*
 gtd_task_get_due_date (GtdTask *task)
 {
+  ECalComponentDateTime comp_dt;
+
   g_return_val_if_fail (GTD_IS_TASK (task), NULL);
 
-  if (task->priv->dt == NULL)
-    return NULL;
+  e_cal_component_get_dtend (task->priv->component, &comp_dt);
 
-  return g_date_time_ref (task->priv->dt);
+  if (comp_dt.value)
+    return gtd_task__convert_icaltime (comp_dt.value, comp_dt.tzid);
+  else
+    return NULL;
 }
 
 /**
@@ -520,40 +552,60 @@ void
 gtd_task_set_due_date (GtdTask   *task,
                        GDateTime *dt)
 {
+  GDateTime *current_dt;
+
   g_assert (GTD_IS_TASK (task));
 
-  if (dt != task->priv->dt)
+  current_dt = gtd_task_get_due_date (task);
+
+  if (dt != current_dt)
     {
+      ECalComponentDateTime comp_dt;
+      icaltimetype *idt;
+
       if (dt &&
-          !(task->priv->dt && g_date_time_compare (task->priv->dt, dt)))
+          current_dt &&
+          g_date_time_compare (current_dt, dt) != 0)
         {
-          /* Get rid of the old GDateTime for this task */
-          if (task->priv->dt)
-            g_date_time_unref (task->priv->dt);
+          idt = g_new0 (icaltimetype, 1);
 
           g_date_time_ref (dt);
 
           /* Copy the given dt */
-          task->priv->dt = g_date_time_new_local (
-                  g_date_time_get_year (dt),
-                  g_date_time_get_month (dt),
-                  g_date_time_get_day_of_month (dt),
-                  g_date_time_get_hour (dt),
-                  g_date_time_get_minute (dt),
-                  g_date_time_get_seconds (dt));
+          idt->year = g_date_time_get_year (dt);
+          idt->month = g_date_time_get_month (dt);
+          idt->day = g_date_time_get_day_of_month (dt);
+          idt->hour = g_date_time_get_hour (dt);
+          idt->minute = g_date_time_get_minute (dt);
+          idt->second = g_date_time_get_seconds (dt);
+          idt->is_date = (idt->hour == 0 &&
+                          idt->minute == 0 &&
+                          idt->second == 0);
+
+          comp_dt.tzid = g_strdup (g_date_time_get_timezone_abbreviation (dt));
 
           g_date_time_unref (dt);
+
+          g_object_notify (G_OBJECT (task), "due-date");
         }
       else if (!dt)
         {
-          if (task->priv->dt)
-            g_date_time_unref (task->priv->dt);
+          idt = NULL;
+          comp_dt.tzid = NULL;
 
-          task->priv->dt = NULL;
+          g_object_notify (G_OBJECT (task), "due-date");
         }
 
-      g_object_notify (G_OBJECT (task), "due-date");
+      comp_dt.value = idt;
+
+      e_cal_component_set_dtend (task->priv->component, &comp_dt);
+
+      if (comp_dt.tzid)
+        g_free ((gchar*) comp_dt.tzid);
     }
+
+  if (current_dt)
+    g_date_time_unref (current_dt);
 }
 
 /**

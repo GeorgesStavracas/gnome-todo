@@ -126,6 +126,8 @@ gtd_list_view__create_task (GtdTaskRow *row,
    */
   gtd_task_set_list (task, priv->task_list);
   gtd_task_list_save_task (priv->task_list, task);
+
+  gtd_manager_create_task (priv->manager, task);
 }
 
 static void

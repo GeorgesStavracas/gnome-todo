@@ -135,7 +135,7 @@ gtd_task_get_property (GObject    *object,
       break;
 
     case PROP_LIST:
-      g_value_set_boxed (value, self->priv->list);
+      g_value_set_object (value, self->priv->list);
       break;
 
     case PROP_POSITION:
@@ -185,7 +185,7 @@ gtd_task_set_property (GObject      *object,
       break;
 
     case PROP_LIST:
-      gtd_task_set_list (self, g_value_get_boxed (value));
+      gtd_task_set_list (self, g_value_get_object (value));
       break;
 
     case PROP_POSITION:
@@ -280,11 +280,11 @@ gtd_task_class_init (GtdTaskClass *klass)
   g_object_class_install_property (
         object_class,
         PROP_LIST,
-        g_param_spec_boxed ("list",
-                            _("List of the task"),
-                            _("The list that owns this task"),
-                            GTD_TYPE_TASK_LIST,
-                            G_PARAM_READWRITE));
+        g_param_spec_object ("list",
+                             _("List of the task"),
+                             _("The list that owns this task"),
+                             GTD_TYPE_TASK_LIST,
+                             G_PARAM_READWRITE));
 
   /**
    * GtdTask::position:

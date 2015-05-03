@@ -76,6 +76,7 @@ gtd_task_row__create_task_for_name (const gchar *name)
 
   gtd_task_set_due_date (task, dt);
   gtd_task_set_title (task, name);
+  gtd_task_save (task);
 
   return task;
 }

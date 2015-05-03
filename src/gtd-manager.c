@@ -69,8 +69,8 @@ gtd_manager__create_task_finished (GObject      *client,
                                    gpointer      user_data)
 {
   gboolean success;
-  gchar *new_uid;
-  GError *error;
+  gchar *new_uid = NULL;
+  GError *error = NULL;
 
   success = e_cal_client_create_object_finish (E_CAL_CLIENT (client),
                                                result,
@@ -88,6 +88,11 @@ gtd_manager__create_task_finished (GObject      *client,
 
       g_error_free (error);
       return;
+    }
+  else if (new_uid)
+    {
+      gtd_object_set_uid (GTD_OBJECT (user_data), new_uid);
+      g_free (new_uid);
     }
 }
 

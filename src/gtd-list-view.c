@@ -56,6 +56,22 @@ enum {
 };
 
 static void
+gtd_list_view__header_func (GtkListBoxRow *row,
+                            GtkListBoxRow *before,
+                            gpointer       user_data)
+{
+  if (before)
+    {
+      GtkWidget *separator;
+
+      separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
+      gtk_widget_show (separator);
+
+      gtk_list_box_row_set_header (row, separator);
+    }
+}
+
+static void
 gtd_list_view__clear_list (GtdListView *view)
 {
   GList *children;
@@ -163,6 +179,20 @@ gtd_list_view_get_property (GObject    *object,
 }
 
 static void
+gtd_list_view_constructed (GObject *object)
+{
+  GtdListView *self = GTD_LIST_VIEW (object);
+
+  G_OBJECT_CLASS (gtd_list_view_parent_class)->constructed (object);
+
+  /* show a nifty separator between lines */
+  gtk_list_box_set_header_func (self->priv->listbox,
+                                (GtkListBoxUpdateHeaderFunc) gtd_list_view__header_func,
+                                NULL,
+                                NULL);
+}
+
+static void
 gtd_list_view_set_property (GObject      *object,
                             guint         prop_id,
                             const GValue *value,
@@ -192,6 +222,7 @@ gtd_list_view_class_init (GtdListViewClass *klass)
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 
   object_class->finalize = gtd_list_view_finalize;
+  object_class->constructed = gtd_list_view_constructed;
   object_class->get_property = gtd_list_view_get_property;
   object_class->set_property = gtd_list_view_set_property;
 

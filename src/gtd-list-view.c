@@ -125,13 +125,7 @@ gtd_list_view__create_task (GtdTaskRow *row,
    * their parent lists.
    */
   gtd_task_set_list (task, priv->task_list);
-
-  /* Add the new task to the list */
-  new_row = gtd_task_row_new (task);
-
-  gtk_list_box_insert (priv->listbox,
-                       new_row,
-                       0);
+  gtd_task_list_save_task (priv->task_list, task);
 }
 
 static void

@@ -67,6 +67,9 @@ gtd_task_finalize (GObject *object)
   if (self->priv->dt)
     g_date_time_unref (self->priv->dt);
 
+  if (self->priv->component)
+    g_object_unref (self->priv->component);
+
   G_OBJECT_CLASS (gtd_task_parent_class)->finalize (object);
 }
 
@@ -166,12 +169,16 @@ gtd_task_set_property (GObject      *object,
       break;
 
     case PROP_COMPONENT:
-      self->priv->component = g_value_get_object (value);
 
       if (!self->priv->component)
         {
           self->priv->component = e_cal_component_new ();
           e_cal_component_set_new_vtype (self->priv->component, E_CAL_COMPONENT_TODO);
+        }
+      else
+        {
+          self->priv->component = g_value_get_object (value);
+          g_object_ref (self->priv->component);
         }
 
       break;

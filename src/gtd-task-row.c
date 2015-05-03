@@ -76,6 +76,23 @@ gtd_task_row_new (GtdTask *task)
 }
 
 static gboolean
+gtd_task_row__entry_focus_out (GtkWidget     *widget,
+                               GdkEventFocus *event,
+                               gpointer       user_data)
+{
+  GtdTaskRowPrivate *priv = GTD_TASK_ROW (user_data)->priv;
+
+  g_return_val_if_fail (GTD_IS_TASK_ROW (user_data), FALSE);
+
+  if (priv->new_task_mode)
+    {
+      gtk_stack_set_visible_child_name (priv->new_task_stack, "label");
+    }
+
+  return FALSE;
+}
+
+static gboolean
 gtd_task_row__focus_in (GtkWidget *widget,
                         GdkEventFocus *event)
 {
@@ -292,6 +309,7 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, title_label);
 
   gtk_widget_class_bind_template_callback (widget_class, gtd_task_row__entry_activated);
+  gtk_widget_class_bind_template_callback (widget_class, gtd_task_row__entry_focus_out);
 }
 
 static void

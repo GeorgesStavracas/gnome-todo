@@ -18,6 +18,7 @@
 
 #include "gtd-list-view.h"
 #include "gtd-manager.h"
+#include "gtd-task.h"
 #include "gtd-task-list.h"
 #include "gtd-task-row.h"
 
@@ -64,6 +65,9 @@ gtd_list_view__create_task (GtdTaskRow *row,
 
   g_return_if_fail (GTD_IS_LIST_VIEW (user_data));
   g_return_if_fail (GTD_IS_TASK_ROW (row));
+  g_return_if_fail (GTD_IS_TASK (task));
+  g_return_if_fail (!priv->readonly);
+  g_return_if_fail (priv->task_list);
 
   new_row = gtd_task_row_new (task);
 

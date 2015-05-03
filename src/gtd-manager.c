@@ -64,6 +64,86 @@ enum
 static guint signals[NUM_SIGNALS] = { 0, };
 
 static void
+gtd_manager__create_task_finished (GObject      *client,
+                                   GAsyncResult *result,
+                                   gpointer      user_data)
+{
+  gboolean success;
+  gchar *new_uid;
+  GError *error;
+
+  success = e_cal_client_create_object_finish (E_CAL_CLIENT (client),
+                                               result,
+                                               &new_uid,
+                                               &error);
+
+  gtd_object_set_ready (GTD_OBJECT (user_data), TRUE);
+
+  if (error)
+    {
+      g_warning ("%s: %s: %s",
+                 G_STRFUNC,
+                 _("Error creating task"),
+                 error->message);
+
+      g_error_free (error);
+      return;
+    }
+}
+
+static void
+gtd_manager__remove_task_finished (GObject      *client,
+                                   GAsyncResult *result,
+                                   gpointer      user_data)
+{
+  gboolean success;
+  GError *error;
+
+  success = e_cal_client_remove_object_finish (E_CAL_CLIENT (client),
+                                               result,
+                                               &error);
+
+  gtd_object_set_ready (GTD_OBJECT (user_data), TRUE);
+
+  if (error)
+    {
+      g_warning ("%s: %s: %s",
+                 G_STRFUNC,
+                 _("Error removing task"),
+                 error->message);
+
+      g_error_free (error);
+      return;
+    }
+}
+
+static void
+gtd_manager__update_task_finished (GObject      *client,
+                                   GAsyncResult *result,
+                                   gpointer      user_data)
+{
+  gboolean success;
+  GError *error;
+
+  success = e_cal_client_modify_object_finish (E_CAL_CLIENT (client),
+                                               result,
+                                               &error);
+
+  gtd_object_set_ready (GTD_OBJECT (user_data), TRUE);
+
+  if (error)
+    {
+      g_warning ("%s: %s: %s",
+                 G_STRFUNC,
+                 _("Error updating task"),
+                 error->message);
+
+      g_error_free (error);
+      return;
+    }
+}
+
+static void
 gtd_manager__fill_task_list (GObject      *client,
                              GAsyncResult *result,
                              gpointer      user_data)
@@ -235,9 +315,9 @@ gtd_manager__source_registry_finish_cb (GObject      *source_object,
   /* While load_sources > 0, GtdManager::ready = FALSE */
   priv->load_sources = g_list_length (sources);
 
-  g_message ("%s: number of sources to load: %d",
-             G_STRFUNC,
-             priv->load_sources);
+  g_debug ("%s: number of sources to load: %d",
+           G_STRFUNC,
+           priv->load_sources);
 
   gtd_object_set_ready (GTD_OBJECT (user_data),
                         priv->load_sources == 0);
@@ -403,4 +483,116 @@ GtdManager*
 gtd_manager_new (void)
 {
   return g_object_new (GTD_TYPE_MANAGER, NULL);
+}
+
+/**
+ * gtd_manager_create_task:
+ * @manager: a #GtdManager
+ * @task: a #GtdTask
+ *
+ * Ask for @task's parent list source to create @task.
+ *
+ * Returns:
+ */
+void
+gtd_manager_create_task (GtdManager *manager,
+                         GtdTask    *task)
+{
+  GtdManagerPrivate *priv = GTD_MANAGER (manager)->priv;
+  ECalComponent *component;
+  ECalClient *client;
+  ESource *source;
+
+  g_return_if_fail (GTD_IS_MANAGER (manager));
+  g_return_if_fail (GTD_IS_TASK (task));
+
+  source = gtd_task_list_get_source (gtd_task_get_list (task));
+  client = g_hash_table_lookup (priv->clients, source);
+  component = gtd_task_get_component (task);
+
+  /* The task is not ready until we finish the operation */
+  gtd_object_set_ready (GTD_OBJECT (task), FALSE);
+
+  e_cal_client_create_object (client,
+                              e_cal_component_get_icalcomponent (component),
+                              NULL, // We won't cancel the operation
+                              (GAsyncReadyCallback) gtd_manager__create_task_finished,
+                              task);
+}
+
+/**
+ * gtd_manager_remove_task:
+ * @manager: a #GtdManager
+ * @task: a #GtdTask
+ *
+ * Ask for @task's parent list source to remove @task.
+ *
+ * Returns:
+ */
+void
+gtd_manager_remove_task (GtdManager *manager,
+                         GtdTask    *task)
+{
+  GtdManagerPrivate *priv = GTD_MANAGER (manager)->priv;
+  ECalComponent *component;
+  ECalComponentId *id;
+  ECalClient *client;
+  ESource *source;
+
+  g_return_if_fail (GTD_IS_MANAGER (manager));
+  g_return_if_fail (GTD_IS_TASK (task));
+
+  source = gtd_task_list_get_source (gtd_task_get_list (task));
+  client = g_hash_table_lookup (priv->clients, source);
+  component = gtd_task_get_component (task);
+  id = e_cal_component_get_id (component);
+
+  /* The task is not ready until we finish the operation */
+  gtd_object_set_ready (GTD_OBJECT (task), FALSE);
+
+  e_cal_client_remove_object (client,
+                              id->rid,
+                              id->uid,
+                              E_CAL_OBJ_MOD_THIS,
+                              NULL, // We won't cancel the operation
+                              (GAsyncReadyCallback) gtd_manager__remove_task_finished,
+                              task);
+
+  e_cal_component_free_id (id);
+}
+
+/**
+ * gtd_manager_update_task:
+ * @manager: a #GtdManager
+ * @task: a #GtdTask
+ *
+ * Ask for @task's parent list source to update @task.
+ *
+ * Returns:
+ */
+void
+gtd_manager_update_task (GtdManager *manager,
+                         GtdTask    *task)
+{
+  GtdManagerPrivate *priv = GTD_MANAGER (manager)->priv;
+  ECalComponent *component;
+  ECalClient *client;
+  ESource *source;
+
+  g_return_if_fail (GTD_IS_MANAGER (manager));
+  g_return_if_fail (GTD_IS_TASK (task));
+
+  source = gtd_task_list_get_source (gtd_task_get_list (task));
+  client = g_hash_table_lookup (priv->clients, source);
+  component = gtd_task_get_component (task);
+
+  /* The task is not ready until we finish the operation */
+  gtd_object_set_ready (GTD_OBJECT (task), FALSE);
+
+  e_cal_client_modify_object (client,
+                              e_cal_component_get_icalcomponent (component),
+                              E_CAL_OBJ_MOD_THIS,
+                              NULL, // We won't cancel the operation
+                              (GAsyncReadyCallback) gtd_manager__update_task_finished,
+                              task);
 }

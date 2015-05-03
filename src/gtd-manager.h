@@ -42,6 +42,16 @@ void                    gtd_manager_remove_task_list      (GtdManager           
 void                    gtd_manager_save_task_list        (GtdManager           *manager,
                                                            GtdTaskList          *list);
 
+/* Tasks */
+void                    gtd_manager_create_task           (GtdManager           *manager,
+                                                           GtdTask              *task);
+
+void                    gtd_manager_remove_task           (GtdManager           *manager,
+                                                           GtdTask              *task);
+
+void                    gtd_manager_update_task           (GtdManager           *manager,
+                                                           GtdTask              *task);
+
 G_END_DECLS
 
 #endif /* GTD_MANAGER_H */

@@ -55,6 +55,24 @@ enum {
 };
 
 static void
+gtd_list_view__create_task (GtdTaskRow *row,
+                            GtdTask    *task,
+                            gpointer    user_data)
+{
+  GtdListViewPrivate *priv = GTD_LIST_VIEW (user_data)->priv;
+  GtkWidget *new_row;
+
+  g_return_if_fail (GTD_IS_LIST_VIEW (user_data));
+  g_return_if_fail (GTD_IS_TASK_ROW (row));
+
+  new_row = gtd_task_row_new (task);
+
+  gtk_list_box_insert (priv->listbox,
+                       new_row,
+                       0);
+}
+
+static void
 gtd_list_view_finalize (GObject *object)
 {
   GtdListView *self = (GtdListView *)object;
@@ -159,6 +177,11 @@ gtd_list_view_init (GtdListView *self)
   self->priv->readonly = TRUE;
   self->priv->new_task_row = GTD_TASK_ROW (gtd_task_row_new (NULL));
   gtd_task_row_set_new_task_mode (self->priv->new_task_row, TRUE);
+
+  g_signal_connect (self->priv->new_task_row,
+                    "create-task",
+                    G_CALLBACK (gtd_list_view__create_task),
+                    self);
 
   gtk_widget_init_template (GTK_WIDGET (self));
 }

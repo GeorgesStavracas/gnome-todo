@@ -68,6 +68,18 @@ enum {
 
 static guint signals[NUM_SIGNALS] = { 0, };
 
+static GtdTask*
+gtd_task_row__create_task_for_name (const gchar *name)
+{
+  GtdTask *task = gtd_task_new (NULL);
+  GDateTime *dt = g_date_time_new_now_local ();
+
+  gtd_task_set_due_date (task, dt);
+  gtd_task_set_title (task, name);
+
+  return task;
+}
+
 GtkWidget*
 gtd_task_row_new (GtdTask *task)
 {
@@ -149,12 +161,16 @@ gtd_task_row__entry_activated (GtkEntry *entry,
 
   if (entry == priv->new_task_entry)
     {
+      GtdTask *new_task;
+
       /* Cannot create empty tasks */
       if (gtk_entry_get_text_length (priv->new_task_entry) == 0)
         return;
 
       gtk_entry_set_text (priv->new_task_entry, "");
-      g_signal_emit (user_data, signals[ACTIVATED], 0);
+      new_task = gtd_task_row__create_task_for_name (gtk_entry_get_text (priv->new_task_entry));
+
+      g_signal_emit (user_data, signals[CREATE_TASK], 0, new_task);
     }
 }
 

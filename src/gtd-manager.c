@@ -209,10 +209,14 @@ gtd_manager__on_client_connected (GObject      *source_object,
 
   if (!error)
     {
+      ESource *parent;
       GtdTaskList *list;
 
+      /* parent source's display name is list's origin */
+      parent = e_source_registry_ref_source (priv->source_registry, e_source_get_parent (source));
+
       /* creates a new task list */
-      list = gtd_task_list_new (source);
+      list = gtd_task_list_new (source, e_source_get_display_name (parent));
 
       /* it's not ready until we fetch the list of tasks from client */
       gtd_object_set_ready (GTD_OBJECT (list), FALSE);
@@ -232,6 +236,8 @@ gtd_manager__on_client_connected (GObject      *source_object,
                      signals[LIST_ADDED],
                      0,
                      list);
+
+      g_object_unref (parent);
 
       g_debug ("%s: %s (%s)",
                G_STRFUNC,

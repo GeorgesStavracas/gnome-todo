@@ -26,6 +26,7 @@ typedef struct
 {
   GList               *tasks;
   ESource             *source;
+  gchar               *origin;
 } GtdTaskListPrivate;
 
 struct _GtdTaskList
@@ -52,6 +53,7 @@ enum
 {
   PROP_0,
   PROP_NAME,
+  PROP_ORIGIN,
   PROP_SOURCE,
   LAST_PROP
 };
@@ -78,6 +80,10 @@ gtd_task_list_get_property (GObject    *object,
       g_value_set_string (value, e_source_get_display_name (self->priv->source));
       break;
 
+    case PROP_ORIGIN:
+      g_value_set_string (value, self->priv->origin);
+      break;
+
     case PROP_SOURCE:
       g_value_set_object (value, self->priv->source);
       break;
@@ -99,6 +105,10 @@ gtd_task_list_set_property (GObject      *object,
     {
     case PROP_NAME:
       gtd_task_list_set_name (self, g_value_get_string (value));
+      break;
+
+    case PROP_ORIGIN:
+      self->priv->origin = g_strdup (g_value_get_string (value));
       break;
 
     case PROP_SOURCE:
@@ -132,6 +142,20 @@ gtd_task_list_class_init (GtdTaskListClass *klass)
                              _("The name of the list"),
                              NULL,
                              G_PARAM_READWRITE));
+
+  /**
+   * GtdTaskList::name:
+   *
+   * The display name of the list.
+   */
+  g_object_class_install_property (
+        object_class,
+        PROP_ORIGIN,
+        g_param_spec_string ("origin",
+                             _("Data origin of the list"),
+                             _("The data origin location of the list"),
+                             NULL,
+                             G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   /**
    * GtdTaskList::source:
@@ -215,11 +239,13 @@ gtd_task_list_init (GtdTaskList *self)
  * Returns: (transfer full): the new #GtdTaskList
  */
 GtdTaskList *
-gtd_task_list_new (ESource *source)
+gtd_task_list_new (ESource     *source,
+                   const gchar *origin)
 {
   return g_object_new (GTD_TYPE_TASK_LIST,
                        "source", source,
                        "uid", e_source_get_uid (source),
+                       "origin", origin,
                        NULL);
 }
 
@@ -362,4 +388,20 @@ gtd_task_list_get_source (GtdTaskList *list)
   g_return_val_if_fail (GTD_IS_TASK_LIST (list), NULL);
 
   return list->priv->source;
+}
+
+/**
+ * gtd_task_list_get_origin:
+ * @list: a @GtdTaskList
+ *
+ * Gets the origin (i.e. parent source display name) of @list.
+ *
+ * Returns: (transfer none): the origin of @list data.
+ */
+const gchar*
+gtd_task_list_get_origin (GtdTaskList *list)
+{
+  g_return_val_if_fail (GTD_IS_TASK_LIST (list), NULL);
+
+  return list->priv->origin;
 }

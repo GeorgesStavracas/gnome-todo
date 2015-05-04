@@ -31,7 +31,8 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (GtdTaskList, gtd_task_list, GTD, TASK_LIST, GtdObject)
 
-GtdTaskList*            gtd_task_list_new                       (ESource                *source);
+GtdTaskList*            gtd_task_list_new                       (ESource                *source,
+                                                                 const gchar            *origin);
 
 const gchar*            gtd_task_list_get_name                  (GtdTaskList            *list);
 
@@ -50,6 +51,8 @@ gboolean                gtd_task_list_contains                  (GtdTaskList    
                                                                  GtdTask                *task);
 
 ESource*                gtd_task_list_get_source                (GtdTaskList            *list);
+
+const gchar*            gtd_task_list_get_origin                (GtdTaskList            *list);
 
 G_END_DECLS
 

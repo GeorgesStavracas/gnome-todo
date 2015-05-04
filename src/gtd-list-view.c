@@ -35,6 +35,7 @@ typedef struct
   /* internal */
   gboolean               readonly;
   gboolean               show_list_name;
+  gboolean               show_completed;
   GList                 *list;
   GtdTaskList           *task_list;
   GtdManager            *manager;
@@ -54,9 +55,17 @@ enum {
   PROP_0,
   PROP_MANAGER,
   PROP_READONLY,
+  PROP_SHOW_COMPLETED,
   PROP_SHOW_LIST_NAME,
   LAST_PROP
 };
+
+static void
+gtd_list_view__done_button_clicked (GtkButton *button,
+                                    gpointer   user_data)
+{
+
+}
 
 static gint
 gtd_list_view__listbox_sort_func (GtdTaskRow *row1,
@@ -197,6 +206,14 @@ gtd_list_view_get_property (GObject    *object,
       g_value_set_object (value, self->priv->manager);
       break;
 
+    case PROP_SHOW_COMPLETED:
+      g_value_set_boolean (value, self->priv->show_completed);
+      break;
+
+    case PROP_SHOW_LIST_NAME:
+      g_value_set_boolean (value, self->priv->show_list_name);
+      break;
+
     case PROP_READONLY:
       g_value_set_boolean (value, self->priv->readonly);
       break;
@@ -237,6 +254,14 @@ gtd_list_view_set_property (GObject      *object,
     {
     case PROP_MANAGER:
       self->priv->manager = g_value_get_object (value);
+      break;
+
+    case PROP_SHOW_COMPLETED:
+      gtd_list_view_set_show_completed (self, g_value_get_boolean (value));
+      break;
+
+    case PROP_SHOW_LIST_NAME:
+      gtd_list_view_set_show_list_name (self, g_value_get_boolean (value));
       break;
 
     case PROP_READONLY:
@@ -294,10 +319,24 @@ gtd_list_view_class_init (GtdListViewClass *klass)
    */
   g_object_class_install_property (
         object_class,
-        PROP_READONLY,
+        PROP_SHOW_LIST_NAME,
         g_param_spec_boolean ("show-list-name",
                               _("Whether task rows show the list name"),
                               _("Whether task rows show the list name at the end of the row"),
+                              FALSE,
+                              G_PARAM_READWRITE));
+
+  /**
+   * GtdListView::show-completed:
+   *
+   * Whether completed tasks are shown.
+   */
+  g_object_class_install_property (
+        object_class,
+        PROP_SHOW_COMPLETED,
+        g_param_spec_boolean ("show-completed",
+                              _("Whether completed tasks are shown"),
+                              _("Whether completed tasks are visible or not"),
                               FALSE,
                               G_PARAM_READWRITE));
 
@@ -597,5 +636,92 @@ gtd_list_view_set_show_list_name (GtdListView *view,
       g_list_free (children);
 
       g_object_notify (G_OBJECT (view), "show-list-name");
+    }
+}
+
+/**
+ * gtd_list_view_get)show_completed:
+ * @view: a #GtdListView
+ *
+ * Returns %TRUE if completed tasks are visible, %FALSE otherwise.
+ *
+ * Returns: %TRUE if completed tasks are visible, %FALSE if they are hidden
+ */
+gboolean
+gtd_list_view_get_show_completed (GtdListView *view)
+{
+  g_return_val_if_fail (GTD_IS_LIST_VIEW (view), FALSE);
+
+  return view->priv->show_completed;
+}
+
+/**
+ * gtd_list_view_set_show_completed:
+ * @view: a #GtdListView
+ * @show_completed: %TRUE to show completed tasks, %FALSE to hide them
+ *
+ * Sets the ::show-completed property to @show_completed.
+ *
+ * Returns:
+ */
+void
+gtd_list_view_set_show_completed (GtdListView *view,
+                                  gboolean     show_completed)
+{
+  GtdListViewPrivate *priv = view->priv;
+
+  g_return_if_fail (GTD_IS_LIST_VIEW (view));
+
+  if (priv->show_completed != show_completed)
+    {
+
+      priv->show_completed = show_completed;
+
+      /* insert or remove list rows */
+      if (show_completed)
+        {
+          GList *list_of_tasks;
+          GList *l;
+
+          list_of_tasks = gtd_list_view_get_list (view);
+
+          for (l = list_of_tasks; l != NULL; l = l->next)
+            {
+              GtkWidget *new_row;
+
+              if (!gtd_task_get_complete (l->data))
+                continue;
+
+              new_row = gtd_task_row_new (l->data);
+
+              gtk_list_box_insert (priv->listbox,
+                                   new_row,
+                                   0);
+            }
+
+            if (list_of_tasks)
+              g_list_free (list_of_tasks);
+        }
+      else
+        {
+          GList *children;
+          GList *l;
+
+          children = gtk_container_get_children (GTK_CONTAINER (priv->listbox));
+
+          for (l = children; l != NULL; l = l->next)
+            {
+              if (!gtd_task_row_get_new_task_mode (l->data) &&
+                  gtd_task_get_complete (gtd_task_row_get_task (l->data)))
+                {
+                  gtk_widget_destroy (l->data);
+                }
+            }
+
+          if (children)
+              g_list_free (children);
+        }
+
+      g_object_notify (G_OBJECT (view), "show-completed");
     }
 }

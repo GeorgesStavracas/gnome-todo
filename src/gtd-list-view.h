@@ -56,6 +56,10 @@ gboolean                  gtd_list_view_get_show_list_name      (GtdListView    
 void                      gtd_list_view_set_show_list_name      (GtdListView            *view,
                                                                  gboolean                show_list_name);
 
+gboolean                  gtd_list_view_get_show_completed      (GtdListView            *view);
+
+void                      gtd_list_view_set_show_completed      (GtdListView            *view,
+                                                                 gboolean                show_completed);
 G_END_DECLS
 
 #endif /* GTD_LIST_VIEW_H */

@@ -77,7 +77,7 @@ gtd_window__manager_ready_changed (GObject    *source,
   else
     {
       gtk_spinner_start (priv->notification_spinner);
-      gtk_label_set_label (priv->notification_label, _("Loading lists…"));
+      gtk_label_set_label (priv->notification_label, _("Loading your task lists…"));
       gtk_widget_show (GTK_WIDGET (priv->notification_spinner));
       gtk_widget_hide (GTK_WIDGET (priv->notification_action_button));
       gtk_revealer_set_reveal_child (priv->notification_revealer, TRUE);

@@ -831,9 +831,9 @@ gtd_task_compare (GtdTask *t1,
   if (!t1 && !t2)
     return  0;
   if (!t1)
-    return -1;
-  if (!t2)
     return  1;
+  if (!t2)
+    return -1;
 
   /*
    * First, compare by ::complete.
@@ -854,9 +854,9 @@ gtd_task_compare (GtdTask *t1,
   if (!dt1 && !dt2)
     retval =  0;
   else if (!dt1)
-    retval = -1;
-  else if (!dt2)
     retval =  1;
+  else if (!dt2)
+    retval = -1;
   else
     retval = g_date_time_compare (t1, t2);
 

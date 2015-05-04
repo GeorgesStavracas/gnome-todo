@@ -31,6 +31,7 @@ typedef struct
   GtkHeaderBar                  *headerbar;
   GtkFlowBox                    *lists_flowbox;
   GtkStack                      *main_stack;
+  GtkRevealer                   *notification_action_button;
   GtkLabel                      *notification_label;
   GtkRevealer                   *notification_revealer;
   GtkSpinner                    *notification_spinner;
@@ -71,8 +72,6 @@ gtd_window__manager_ready_changed (GObject    *source,
   if (gtd_object_get_ready (GTD_OBJECT (source)))
     {
       gtk_spinner_stop (priv->notification_spinner);
-      gtk_label_set_label (priv->notification_label, "");
-      gtk_widget_hide (GTK_WIDGET (priv->notification_spinner));
       gtk_revealer_set_reveal_child (priv->notification_revealer, FALSE);
     }
   else
@@ -80,6 +79,7 @@ gtd_window__manager_ready_changed (GObject    *source,
       gtk_spinner_start (priv->notification_spinner);
       gtk_label_set_label (priv->notification_label, _("Loading lists…"));
       gtk_widget_show (GTK_WIDGET (priv->notification_spinner));
+      gtk_widget_hide (GTK_WIDGET (priv->notification_action_button));
       gtk_revealer_set_reveal_child (priv->notification_revealer, TRUE);
     }
 }
@@ -227,6 +227,7 @@ gtd_window_class_init (GtdWindowClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, lists_flowbox);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, list_view);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, main_stack);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, notification_action_button);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, notification_label);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, notification_revealer);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, notification_spinner);

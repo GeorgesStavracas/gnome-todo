@@ -809,3 +809,59 @@ gtd_task_save (GtdTask *task)
 
   e_cal_component_commit_sequence (task->priv->component);
 }
+
+gint
+gtd_task_compare (GtdTask *t1,
+                  GtdTask *t2)
+{
+  GDateTime *dt1;
+  GDateTime *dt2;
+  gboolean completed1;
+  gboolean completed2;
+  gint retval;
+
+  if (!t1 && !t2)
+    return  0;
+  if (!t1)
+    return -1;
+  if (!t2)
+    return  1;
+
+  /*
+   * First, compare by ::complete.
+   */
+  completed1 = gtd_task_get_complete (t1);
+  completed2 = gtd_task_get_complete (t2);
+  retval = completed1 - completed2;
+
+  if (retval != 0)
+    return retval;
+
+  /*
+   * Second, compare by ::due-date.
+   */
+  dt1 = gtd_task_get_due_date (t1);
+  dt2 = gtd_task_get_due_date (t2);
+
+  if (!dt1 && !dt2)
+    retval =  0;
+  else if (!dt1)
+    retval = -1;
+  else if (!dt2)
+    retval =  1;
+  else
+    retval = g_date_time_compare (t1, t2);
+
+  if (dt1)
+    g_date_time_unref (dt1);
+  if (dt2)
+    g_date_time_unref (dt2);
+
+  if (retval != 0)
+    return retval;
+
+  /*
+   * If they're equal up to now, compare by title.
+   */
+  return g_strcmp0 (gtd_task_get_title (t1), gtd_task_get_title (t2));
+}

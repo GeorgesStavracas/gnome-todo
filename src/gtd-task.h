@@ -68,6 +68,9 @@ void                gtd_task_abort                    (GtdTask              *tas
 
 void                gtd_task_save                     (GtdTask              *task);
 
+gint                gtd_task_compare                  (GtdTask              *t1,
+                                                       GtdTask              *t2);
+
 G_END_DECLS
 
 #endif /* GTD_TASK_H */

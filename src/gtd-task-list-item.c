@@ -179,7 +179,17 @@ gtd_task_list_item_set_property (GObject      *object,
 
     case PROP_TASK_LIST:
       priv->list = g_value_get_object (value);
-      gtk_label_set_label (GTK_LABEL (priv->title_label), gtd_task_list_get_name (priv->list));
+      g_object_bind_property (priv->list,
+                              "name",
+                              priv->title_label,
+                              "label",
+                              G_BINDING_DEFAULT | G_BINDING_SYNC_CREATE);
+
+      g_object_bind_property (priv->list,
+                              "origin",
+                              priv->subtitle_label,
+                              "label",
+                              G_BINDING_DEFAULT | G_BINDING_SYNC_CREATE);
 
       g_signal_connect_swapped (priv->list,
                                 "notify::ready",

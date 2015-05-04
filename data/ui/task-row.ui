@@ -78,6 +78,18 @@
                 <property name="hexpand">True</property>
                 <property name="spacing">6</property>
                 <child>
+                  <object class="GtkSpinner" id="task_loading_spinner">
+                    <property name="visible">False</property>
+                    <property name="can_focus">False</property>
+                    <property name="active">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
                   <object class="GtkButton" id="task_attachment_button">
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
@@ -94,7 +106,7 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">0</property>
+                    <property name="position">1</property>
                   </packing>
                 </child>
                 <child>
@@ -114,7 +126,7 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">1</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
               </object>

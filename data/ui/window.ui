@@ -117,7 +117,6 @@
                               <object class="GtkFrame" id="lists_frame">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="label_xalign">0</property>
                                 <property name="shadow_type">none</property>
                                 <child>
                                   <object class="GtkFlowBox" id="lists_flowbox">

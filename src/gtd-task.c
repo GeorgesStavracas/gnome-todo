@@ -22,6 +22,7 @@
 #include <glib/gi18n.h>
 #include <libecal/libecal.h>
 #include <libical/icaltime.h>
+#include <libical/icaltimezone.h>
 
 typedef struct
 {
@@ -59,19 +60,25 @@ gtd_task__convert_icaltime (const icaltimetype *date,
                             const gchar        *tz)
 {
   GDateTime *dt;
-  gboolean is_date = date->is_date ? TRUE : FALSE;
+  gboolean is_date;
 
   g_return_val_if_fail (date, NULL);
 
+  is_date = date->is_date ? TRUE : FALSE;
+
   if (tz)
     {
-      dt = g_date_time_new (g_time_zone_new (tz),
+      GTimeZone *timezone = g_time_zone_new (tz);
+
+      dt = g_date_time_new (timezone,
                             date->year,
                             date->month,
                             date->day,
                             is_date ? date->hour : 0,
                             is_date ? date->minute : 0,
                             is_date ? date->second : 0.0);
+
+      g_time_zone_unref (timezone);
     }
   else
     {
@@ -591,9 +598,13 @@ gtd_task_set_due_date (GtdTask   *task,
       ECalComponentDateTime comp_dt;
       icaltimetype *idt;
 
-      if (dt &&
-          current_dt &&
-          g_date_time_compare (current_dt, dt) != 0)
+      comp_dt.value = NULL;
+      comp_dt.tzid = NULL;
+
+      if (!current_dt ||
+          (current_dt &&
+           dt &&
+           g_date_time_compare (current_dt, dt) != 0))
         {
           idt = g_new0 (icaltimetype, 1);
 
@@ -628,10 +639,7 @@ gtd_task_set_due_date (GtdTask   *task,
 
       e_cal_component_set_dtend (task->priv->component, &comp_dt);
 
-      if (comp_dt.value)
-        e_cal_component_free_icaltimetype (comp_dt.value);
-      if (comp_dt.tzid)
-        g_free ((gchar*) comp_dt.tzid);
+      e_cal_component_free_datetime (&comp_dt);
     }
 
   if (current_dt)

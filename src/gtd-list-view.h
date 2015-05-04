@@ -51,6 +51,11 @@ GtdTaskList*              gtd_list_view_get_task_list           (GtdListView    
 void                      gtd_list_view_set_task_list           (GtdListView            *view,
                                                                  GtdTaskList            *list);
 
+gboolean                  gtd_list_view_get_show_list_name      (GtdListView            *view);
+
+void                      gtd_list_view_set_show_list_name      (GtdListView            *view,
+                                                                 gboolean                show_list_name);
+
 G_END_DECLS
 
 #endif /* GTD_LIST_VIEW_H */

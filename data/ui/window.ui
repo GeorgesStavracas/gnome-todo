@@ -227,6 +227,7 @@
                       <object class="GtdListView" id="today_list_view">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="show_list_name">True</property>
                       </object>
                       <packing>
                         <property name="name">today</property>
@@ -238,6 +239,7 @@
                       <object class="GtdListView" id="scheduled_list_view">
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
+                        <property name="show_list_name">True</property>
                       </object>
                       <packing>
                         <property name="name">scheduled</property>

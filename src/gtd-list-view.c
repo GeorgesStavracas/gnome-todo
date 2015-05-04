@@ -34,6 +34,7 @@ typedef struct
 
   /* internal */
   gboolean               readonly;
+  gboolean               show_list_name;
   GList                 *list;
   GtdTaskList           *task_list;
   GtdManager            *manager;
@@ -53,6 +54,7 @@ enum {
   PROP_0,
   PROP_MANAGER,
   PROP_READONLY,
+  PROP_SHOW_LIST_NAME,
   LAST_PROP
 };
 
@@ -283,6 +285,20 @@ gtd_list_view_class_init (GtdListViewClass *klass)
                               _("Whether the list is readonly"),
                               _("Whether the list is readonly, i.e. doesn't show the New Task row, or not"),
                               TRUE,
+                              G_PARAM_READWRITE));
+
+  /**
+   * GtdListView::show-list-name:
+   *
+   * Whether the task rows should show the list name.
+   */
+  g_object_class_install_property (
+        object_class,
+        PROP_READONLY,
+        g_param_spec_boolean ("show-list-name",
+                              _("Whether task rows show the list name"),
+                              _("Whether task rows show the list name at the end of the row"),
+                              FALSE,
                               G_PARAM_READWRITE));
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/list-view.ui");
@@ -531,5 +547,55 @@ gtd_list_view_set_task_list (GtdListView *view,
                         "task-added",
                         G_CALLBACK (gtd_list_view__task_added),
                         view);
+    }
+}
+
+/**
+ * gtd_list_view_get_show_list_name:
+ * @view: a #GtdListView
+ *
+ * Whether @view shows the tasks' list names.
+ *
+ * Returns: %TRUE if @view show the tasks' list names, %FALSE otherwise
+ */
+gboolean
+gtd_list_view_get_show_list_name (GtdListView *view)
+{
+  g_return_val_if_fail (GTD_IS_LIST_VIEW (view), FALSE);
+
+  return view->priv->show_list_name;
+}
+
+/**
+ * gtd_list_view_set_show_list_name:
+ * @view: a #GtdListView
+ * @show_list_name: %TRUE to show list names, %FALSE to hide it
+ *
+ * Whether @view should should it's tasks' list name.
+ *
+ * Returns:
+ */
+void
+gtd_list_view_set_show_list_name (GtdListView *view,
+                                  gboolean     show_list_name)
+{
+  g_return_if_fail (GTD_IS_LIST_VIEW (view));
+
+  if (view->priv->show_list_name != show_list_name)
+    {
+      GList *children;
+      GList *l;
+
+      view->priv->show_list_name = show_list_name;
+
+      /* update current children */
+      children = gtk_container_get_children (GTK_CONTAINER (view->priv->listbox));
+
+      for (l = children; l != NULL; l = l->next)
+        gtd_task_row_set_list_name_visible (l->data, show_list_name);
+
+      g_list_free (children);
+
+      g_object_notify (G_OBJECT (view), "show-list-name");
     }
 }

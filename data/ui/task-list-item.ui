@@ -12,7 +12,6 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="orientation">vertical</property>
-        <property name="spacing">6</property>
         <child>
           <object class="GtkOverlay" id="overlay">
             <property name="width_request">176</property>
@@ -90,6 +89,10 @@
           <object class="GtkLabel" id="subtitle_label">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="ellipsize">middle</property>
+            <style>
+              <class name="dim-label" />
+            </style>
           </object>
           <packing>
             <property name="expand">False</property>

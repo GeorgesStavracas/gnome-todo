@@ -73,9 +73,7 @@ static GtdTask*
 gtd_task_row__create_task_for_name (const gchar *name)
 {
   GtdTask *task = gtd_task_new (NULL);
-  GDateTime *dt = g_date_time_new_now_local ();
 
-  gtd_task_set_due_date (task, dt);
   gtd_task_set_title (task, name);
   gtd_task_save (task);
 

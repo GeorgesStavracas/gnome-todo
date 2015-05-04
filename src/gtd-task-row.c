@@ -451,6 +451,13 @@ gtd_task_row_set_task (GtdTaskRow *row,
                                   row->priv->done_check,
                                   "active",
                                   G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
+
+          g_object_bind_property (task,
+                                  "complete",
+                                  row,
+                                  "visible",
+                                  G_BINDING_DEFAULT | G_BINDING_INVERT_BOOLEAN | G_BINDING_SYNC_CREATE);
+
         }
 
       g_object_notify (G_OBJECT (row), "task");

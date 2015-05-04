@@ -102,7 +102,7 @@ gtd_manager__remove_task_finished (GObject      *client,
                                    gpointer      user_data)
 {
   gboolean success;
-  GError *error;
+  GError *error = NULL;
 
   success = e_cal_client_remove_object_finish (E_CAL_CLIENT (client),
                                                result,
@@ -128,7 +128,7 @@ gtd_manager__update_task_finished (GObject      *client,
                                    gpointer      user_data)
 {
   gboolean success;
-  GError *error;
+  GError *error = NULL;
 
   success = e_cal_client_modify_object_finish (E_CAL_CLIENT (client),
                                                result,

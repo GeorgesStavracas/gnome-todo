@@ -31,6 +31,9 @@ typedef struct
   GtkHeaderBar                  *headerbar;
   GtkFlowBox                    *lists_flowbox;
   GtkStack                      *main_stack;
+  GtkLabel                      *notification_label;
+  GtkRevealer                   *notification_revealer;
+  GtkSpinner                    *notification_spinner;
   GtkStackSwitcher              *stack_switcher;
   GtdListView                   *list_view;
 
@@ -55,6 +58,31 @@ enum {
   PROP_MANAGER,
   LAST_PROP
 };
+
+static void
+gtd_window__manager_ready_changed (GObject    *source,
+                                   GParamSpec *spec,
+                                   gpointer    user_data)
+{
+  GtdWindowPrivate *priv = GTD_WINDOW (user_data)->priv;
+
+  g_return_if_fail (GTD_IS_WINDOW (user_data));
+
+  if (gtd_object_get_ready (GTD_OBJECT (source)))
+    {
+      gtk_spinner_stop (priv->notification_spinner);
+      gtk_label_set_label (priv->notification_label, "");
+      gtk_widget_hide (GTK_WIDGET (priv->notification_spinner));
+      gtk_revealer_set_reveal_child (priv->notification_revealer, FALSE);
+    }
+  else
+    {
+      gtk_spinner_start (priv->notification_spinner);
+      gtk_label_set_label (priv->notification_label, _("Loading lists…"));
+      gtk_widget_show (GTK_WIDGET (priv->notification_spinner));
+      gtk_revealer_set_reveal_child (priv->notification_revealer, TRUE);
+    }
+}
 
 static void
 gtd_window__back_button_clicked (GtkButton *button,
@@ -154,6 +182,10 @@ gtd_window_set_property (GObject      *object,
       gtd_list_view_set_manager (self->priv->list_view, self->priv->manager);
 
       g_signal_connect (self->priv->manager,
+                        "notify::ready",
+                        G_CALLBACK (gtd_window__manager_ready_changed),
+                        self);
+      g_signal_connect (self->priv->manager,
                         "list-added",
                         G_CALLBACK (gtd_window__list_added),
                         self);
@@ -195,6 +227,9 @@ gtd_window_class_init (GtdWindowClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, lists_flowbox);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, list_view);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, main_stack);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, notification_label);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, notification_revealer);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, notification_spinner);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, stack_switcher);
 
   gtk_widget_class_bind_template_callback (widget_class, gtd_window__back_button_clicked);

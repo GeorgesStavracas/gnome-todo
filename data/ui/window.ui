@@ -86,6 +86,84 @@
           <object class="GtkOverlay" id="overlay">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <child type="overlay">
+              <object class="GtkRevealer" id="notification_revealer">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="transition_type">slide-down</property>
+                <property name="halign">center</property>
+                <property name="valign">start</property>
+                <child>
+                  <object class="GtkFrame" id="notification_frame">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <child>
+                      <object class="GtkBox" id="notification_box">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="spacing">12</property>
+                        <child>
+                          <object class="GtkSpinner" id="notification_spinner">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="notification_label">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="notification_action_button">
+                            <property name="visible">False</property>
+                            <property name="can_focus">False</property>
+                            <property name="label" translatable="yes">Undo</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="notification_close_button">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="relief">none</property>
+                            <child>
+                              <object class="GtkImage" id="notification_close_button_icon">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="icon_name">window-close-symbolic</property>
+                              </object>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">3</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                    <style>
+                      <class name="app-notification" />
+                    </style>
+                  </object>
+                </child>
+              </object>
+            </child>
             <child>
               <object class="GtkBox" id="main_box">
                 <property name="visible">True</property>

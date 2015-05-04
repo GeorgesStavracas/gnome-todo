@@ -454,3 +454,21 @@ gtd_task_row_set_task (GtdTaskRow *row,
       g_object_notify (G_OBJECT (row), "task");
     }
 }
+
+/**
+ * gtd_task_row_set_list_name_visible:
+ * @row: a #GtdTaskRow
+ * @show_list_name: %TRUE to show the list name, %FALSE to hide it
+ *
+ * Sets @row's list name label visibility to @show_list_name.
+ *
+ * Returns:
+ */
+void
+gtd_task_row_set_list_name_visible (GtdTaskRow *row,
+                                    gboolean    show_list_name)
+{
+  g_return_if_fail (GTD_IS_TASK_ROW (row));
+
+  gtk_widget_set_visible (GTK_WIDGET (row->priv->task_list_label), show_list_name);
+}

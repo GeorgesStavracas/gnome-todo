@@ -126,7 +126,7 @@
             </child>
             <child>
               <object class="GtkLabel" id="task_list_label">
-                <property name="visible">True</property>
+                <property name="visible">False</property>
                 <property name="can_focus">False</property>
                 <style>
                   <class name="dim-label"/>

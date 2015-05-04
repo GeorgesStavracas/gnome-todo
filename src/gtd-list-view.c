@@ -55,6 +55,22 @@ enum {
   LAST_PROP
 };
 
+static gint
+gtd_list_view__listbox_sort_func (GtdTaskRow *row1,
+                                  GtdTaskRow *row2,
+                                  gpointer    user_data)
+{
+  g_return_val_if_fail (GTD_IS_TASK_ROW (row1), 0);
+  g_return_val_if_fail (GTD_IS_TASK_ROW (row2), 0);
+
+  if (gtd_task_row_get_new_task_mode (row1))
+    return 1;
+  else if (gtd_task_row_get_new_task_mode (row2))
+    return -1;
+  else
+    return gtd_task_compare (gtd_task_row_get_task (row1), gtd_task_row_get_task (row2));
+}
+
 static void
 gtd_list_view__header_func (GtkListBoxRow *row,
                             GtkListBoxRow *before,
@@ -190,6 +206,11 @@ gtd_list_view_constructed (GObject *object)
                                 (GtkListBoxUpdateHeaderFunc) gtd_list_view__header_func,
                                 NULL,
                                 NULL);
+
+  gtk_list_box_set_sort_func (self->priv->listbox,
+                              (GtkListBoxSortFunc) gtd_list_view__listbox_sort_func,
+                              NULL,
+                              NULL);
 }
 
 static void

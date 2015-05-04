@@ -30,6 +30,7 @@ typedef struct
 {
   GtkListBox            *listbox;
   GtdTaskRow            *new_task_row;
+  GtkRevealer           *revealer;
 
   /* internal */
   gboolean               readonly;
@@ -103,6 +104,8 @@ gtd_list_view__clear_list (GtdListView *view)
         gtk_widget_destroy (l->data);
     }
 
+  gtk_revealer_set_reveal_child (view->priv->revealer, FALSE);
+
   g_list_free (children);
 }
 
@@ -118,9 +121,16 @@ gtd_list_view__add_task (GtdListView *view,
 
   new_row = gtd_task_row_new (task);
 
-  gtk_list_box_insert (priv->listbox,
-                       new_row,
-                       0);
+  if (!gtd_task_get_complete (task))
+    {
+      gtk_list_box_insert (priv->listbox,
+                           new_row,
+                           0);
+    }
+  else if (!gtk_revealer_get_reveal_child (priv->revealer))
+    {
+      gtk_revealer_set_reveal_child (priv->revealer, TRUE);
+    }
 }
 
 static void
@@ -278,6 +288,7 @@ gtd_list_view_class_init (GtdListViewClass *klass)
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/list-view.ui");
 
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, listbox);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdListView, revealer);
 }
 
 static void

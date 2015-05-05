@@ -34,6 +34,7 @@ typedef struct
   GtkImage              *done_image;
 
   /* internal */
+  gboolean               can_toggle;
   gboolean               readonly;
   gboolean               show_list_name;
   gboolean               show_completed;
@@ -61,6 +62,13 @@ enum {
   LAST_PROP
 };
 
+static gboolean
+can_toggle_show_completed (GtdListView *view)
+{
+  view->priv->can_toggle = TRUE;
+  return G_SOURCE_REMOVE;
+}
+
 static void
 gtd_list_view__done_button_clicked (GtkButton *button,
                                     gpointer   user_data)
@@ -70,12 +78,27 @@ gtd_list_view__done_button_clicked (GtkButton *button,
 
   g_return_if_fail (GTD_IS_LIST_VIEW (view));
 
+  if (!view->priv->can_toggle)
+    return;
+
+  /*
+   * The can_toggle bitfield is needed because the user
+   * can click mindlessly the Done button, while the row
+   * animations are not finished. While the animation is
+   * running, we ignore other clicks.
+   */
+  view->priv->can_toggle = FALSE;
+
   show_completed = view->priv->show_completed;
 
   gtd_list_view_set_show_completed (view, !show_completed);
   gtk_image_set_from_icon_name (view->priv->done_image,
                                 show_completed ? "zoom-in-symbolic" : "zoom-out-symbolic",
                                 GTK_ICON_SIZE_BUTTON);
+
+  g_timeout_add (205,
+                 (GSourceFunc) can_toggle_show_completed,
+                 user_data);
 }
 
 static gint
@@ -418,6 +441,7 @@ gtd_list_view_init (GtdListView *self)
 {
   self->priv = gtd_list_view_get_instance_private (self);
   self->priv->readonly = TRUE;
+  self->priv->can_toggle = TRUE;
   self->priv->new_task_row = GTD_TASK_ROW (gtd_task_row_new (NULL));
   gtd_task_row_set_new_task_mode (self->priv->new_task_row, TRUE);
 

@@ -497,8 +497,6 @@ gtd_task_row_reveal (GtdTaskRow *row)
 {
   g_return_if_fail (GTD_IS_TASK_ROW (row));
 
-  g_debug ("Reveal row");
-
   gtk_revealer_set_reveal_child (row->priv->revealer, TRUE);
 }
 
@@ -515,8 +513,6 @@ gtd_task_row_destroy (GtdTaskRow *row)
 {
   g_return_if_fail (GTD_IS_TASK_ROW (row));
   g_return_if_fail (gtk_revealer_get_child_revealed (row->priv->revealer));
-
-  g_debug ("Destroy row");
 
   g_signal_connect_swapped (row->priv->revealer,
                             "notify::child-revealed",

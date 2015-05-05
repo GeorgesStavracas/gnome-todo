@@ -429,26 +429,33 @@ gtd_task_set_complete (GtdTask  *task,
 
   if (gtd_task_get_complete (task) != complete)
     {
-      GDateTime *now;
       icaltimetype *dt;
 
-      now = g_date_time_new_now_local ();
+      if (complete)
+        {
+          GDateTime *now = g_date_time_new_now_local ();
 
-      dt = g_new0 (icaltimetype, 1);
-      dt->year = g_date_time_get_year (now);
-      dt->month = g_date_time_get_month (now);
-      dt->day = g_date_time_get_day_of_month (now);
-      dt->hour = g_date_time_get_hour (now);
-      dt->minute = g_date_time_get_minute (now);
-      dt->second = g_date_time_get_seconds (now);
-      dt->is_date = (dt->hour == 0 &&
-                     dt->minute == 0 &&
-                     dt->second == 0);
-      dt->zone = icaltimezone_get_builtin_timezone_from_tzid (g_date_time_get_timezone_abbreviation (now));
+          dt = g_new0 (icaltimetype, 1);
+          dt->year = g_date_time_get_year (now);
+          dt->month = g_date_time_get_month (now);
+          dt->day = g_date_time_get_day_of_month (now);
+          dt->hour = g_date_time_get_hour (now);
+          dt->minute = g_date_time_get_minute (now);
+          dt->second = g_date_time_get_seconds (now);
+          dt->is_date = (dt->hour == 0 &&
+                         dt->minute == 0 &&
+                         dt->second == 0);
+          dt->zone = icaltimezone_get_builtin_timezone_from_tzid (g_date_time_get_timezone_abbreviation (now));
+        }
+      else
+        {
+          dt = NULL;
+        }
 
       e_cal_component_set_completed (task->priv->component, dt);
 
-      e_cal_component_free_icaltimetype (dt);
+      if (dt)
+        e_cal_component_free_icaltimetype (dt);
 
       g_object_notify (G_OBJECT (task), "complete");
     }

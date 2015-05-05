@@ -35,6 +35,7 @@ typedef struct
 
   /* internal */
   gboolean               can_toggle;
+  gint                   complete_tasks;
   gboolean               readonly;
   gboolean               show_list_name;
   gboolean               show_completed;
@@ -138,6 +139,8 @@ gtd_list_view__clear_list (GtdListView *view)
 
   g_return_if_fail (GTD_IS_LIST_VIEW (view));
 
+  view->priv->complete_tasks = 0;
+
   children = gtk_container_get_children (GTK_CONTAINER (view->priv->listbox));
 
   for (l = children; l != NULL; l = l->next)
@@ -170,9 +173,12 @@ gtd_list_view__add_task (GtdListView *view,
                            0);
       gtd_task_row_reveal (GTD_TASK_ROW (new_row));
     }
-  else if (!gtk_revealer_get_reveal_child (priv->revealer))
+  else
     {
-      gtk_revealer_set_reveal_child (priv->revealer, TRUE);
+      priv->complete_tasks++;
+
+      if (!gtk_revealer_get_reveal_child (priv->revealer))
+        gtk_revealer_set_reveal_child (priv->revealer, TRUE);
     }
 }
 
@@ -209,15 +215,25 @@ gtd_list_view__task_completed (GObject    *object,
 {
   GtdListViewPrivate *priv = GTD_LIST_VIEW (user_data)->priv;
   GtdTask *task = GTD_TASK (object);
+  gboolean task_complete;
 
   g_return_if_fail (GTD_IS_TASK (object));
   g_return_if_fail (GTD_IS_LIST_VIEW (user_data));
 
+  task_complete = gtd_task_get_complete (task);
+
   gtd_manager_update_task (priv->manager, task);
+
+  if (task_complete)
+    priv->complete_tasks++;
+  else
+    priv->complete_tasks--;
+
+  gtk_revealer_set_reveal_child (priv->revealer, priv->complete_tasks > 0);
 
   if (!priv->show_completed)
     {
-      if (gtd_task_get_complete (task))
+      if (task_complete)
         gtd_list_view__remove_task (GTD_LIST_VIEW (user_data), task);
       else
         gtd_list_view__add_task (GTD_LIST_VIEW (user_data), task);

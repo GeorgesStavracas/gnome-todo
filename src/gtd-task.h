@@ -54,9 +54,9 @@ GtdTaskList*        gtd_task_get_list                 (GtdTask              *tas
 void                gtd_task_set_list                 (GtdTask              *task,
                                                        GtdTaskList          *list);
 
-gint                gtd_task_get_position             (GtdTask              *task);
+gint                gtd_task_get_priority             (GtdTask              *task);
 
-void                gtd_task_set_position             (GtdTask              *task,
+void                gtd_task_set_priority             (GtdTask              *task,
                                                        gint                  position);
 
 const gchar*        gtd_task_get_title                (GtdTask              *task);

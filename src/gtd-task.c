@@ -27,7 +27,6 @@
 typedef struct
 {
   gchar           *description;
-  gint             position;
   GtdTaskList     *list;
   ECalComponent   *component;
 } GtdTaskPrivate;
@@ -50,7 +49,7 @@ enum
   PROP_DESCRIPTION,
   PROP_DUE_DATE,
   PROP_LIST,
-  PROP_POSITION,
+  PROP_PRIORITY,
   PROP_TITLE,
   LAST_PROP
 };
@@ -175,8 +174,8 @@ gtd_task_get_property (GObject    *object,
       g_value_set_object (value, self->priv->list);
       break;
 
-    case PROP_POSITION:
-      g_value_set_int (value, self->priv->position);
+    case PROP_PRIORITY:
+      g_value_set_int (value, gtd_task_get_priority (self));
       break;
 
     case PROP_TITLE:
@@ -229,8 +228,8 @@ gtd_task_set_property (GObject      *object,
       gtd_task_set_list (self, g_value_get_object (value));
       break;
 
-    case PROP_POSITION:
-      gtd_task_set_position (self, g_value_get_int (value));
+    case PROP_PRIORITY:
+      gtd_task_set_priority (self, g_value_get_int (value));
       break;
 
     case PROP_TITLE:
@@ -328,19 +327,19 @@ gtd_task_class_init (GtdTaskClass *klass)
                              G_PARAM_READWRITE));
 
   /**
-   * GtdTask::position:
+   * GtdTask::priority:
    *
-   * Position of the task at the list, -1 if not set.
+   * Priority of the task, 0 if not set.
    */
   g_object_class_install_property (
         object_class,
-        PROP_POSITION,
-        g_param_spec_int ("position",
-                          _("Position of the task"),
-                          _("The position of the task regarding the list. -1 means no position set, and tasks will be sorted alfabetically."),
-                          -1,
+        PROP_PRIORITY,
+        g_param_spec_int ("priority",
+                          _("Priority of the task"),
+                          _("The priority of the task. 0 means no priority set, and tasks will be sorted alfabetically."),
+                          0,
                           G_MAXINT,
-                          -1,
+                          0,
                           G_PARAM_READWRITE));
 
   /**
@@ -693,43 +692,59 @@ gtd_task_set_list (GtdTask     *task,
 }
 
 /**
- * gtd_task_get_position:
+ * gtd_task_get_priority:
  * @task: a #GtdTask
  *
- * Returns the position of @task inside the parent #GtdTaskList,
+ * Returns the priority of @task inside the parent #GtdTaskList,
  * or -1 if not set.
  *
- * Returns: the position of the task, or -1
+ * Returns: the priority of the task, or 0
  */
 gint
-gtd_task_get_position (GtdTask *task)
+gtd_task_get_priority (GtdTask *task)
 {
+  gint *priority = NULL;
+  gint p;
+
   g_assert (GTD_IS_TASK (task));
 
-  return task->priv->position;
+  e_cal_component_get_priority (task->priv->component, &priority);
+
+  if (!priority)
+    return -1;
+
+  p = *priority;
+
+  g_free (priority);
+
+  return p;
 }
 
 /**
- * gtd_task_set_position:
+ * gtd_task_set_priority:
  * @task: a #GtdTask
- * @position: the position of @task, or -1
+ * @priority: the priority of @task, or -1
  *
- * Sets the @task position inside the parent #GtdTaskList. It
+ * Sets the @task priority inside the parent #GtdTaskList. It
  * is up to the interface to handle two or more #GtdTask with
- * the same position value.
+ * the same priority value.
  *
  * Returns:
  */
 void
-gtd_task_set_position (GtdTask *task,
-                       gint     position)
+gtd_task_set_priority (GtdTask *task,
+                       gint     priority)
 {
-  g_assert (GTD_IS_TASK (task));
-  g_assert (position >= -1);
+  gint current;
 
-  if (position != task->priv->position)
+  g_assert (GTD_IS_TASK (task));
+  g_assert (priority >= -1);
+
+  current = gtd_task_get_priority (task);
+
+  if (priority != current)
     {
-      task->priv->position = position;
+      e_cal_component_set_priority (task->priv->component, &priority);
       g_object_notify (G_OBJECT (task), "position");
     }
 }
@@ -833,6 +848,8 @@ gtd_task_compare (GtdTask *t1,
   GDateTime *dt2;
   gboolean completed1;
   gboolean completed2;
+  gint p1;
+  gint p2;
   gint retval;
 
   if (!t1 && !t2)
@@ -853,7 +870,18 @@ gtd_task_compare (GtdTask *t1,
     return retval;
 
   /*
-   * Second, compare by ::due-date.
+   * Second, compare by ::priority
+   */
+  p1 = gtd_task_get_priority (t1);
+  p2 = gtd_task_get_priority (t2);
+
+  retval = p1 - p2;
+
+  if (retval != 0)
+    return retval;
+
+  /*
+   * Third, compare by ::due-date.
    */
   dt1 = gtd_task_get_due_date (t1);
   dt2 = gtd_task_get_due_date (t2);

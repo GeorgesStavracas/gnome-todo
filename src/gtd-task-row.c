@@ -25,6 +25,7 @@
 
 typedef struct
 {
+  GtkRevealer               *revealer;
   GtkStack                  *stack;
 
   /* new task widgets */
@@ -339,6 +340,7 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, stack);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, new_task_entry);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, new_task_stack);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, revealer);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, task_list_label);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, task_loading_spinner);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, title_entry);
@@ -395,6 +397,7 @@ gtd_task_row_set_new_task_mode (GtdTaskRow *row,
       if (new_task_mode)
         {
           gtk_stack_set_visible_child_name (GTK_STACK (row->priv->stack), "new");
+          gtd_task_row_reveal (row);
         }
       else
         {
@@ -479,4 +482,46 @@ gtd_task_row_set_list_name_visible (GtdTaskRow *row,
   g_return_if_fail (GTD_IS_TASK_ROW (row));
 
   gtk_widget_set_visible (GTK_WIDGET (row->priv->task_list_label), show_list_name);
+}
+
+/**
+ * gtd_task_row_reveal:
+ * @row: a #GtdTaskRow
+ *
+ * Runs a nifty animation to reveal @row.
+ *
+ * Returns:
+ */
+void
+gtd_task_row_reveal (GtdTaskRow *row)
+{
+  g_return_if_fail (GTD_IS_TASK_ROW (row));
+
+  g_debug ("Reveal row");
+
+  gtk_revealer_set_reveal_child (row->priv->revealer, TRUE);
+}
+
+/**
+ * gtd_task_row_destroy:
+ * @row: a #GtdTaskRow
+ *
+ * Runs an animation and the destory @row.
+ *
+ * Returns:
+ */
+void
+gtd_task_row_destroy (GtdTaskRow *row)
+{
+  g_return_if_fail (GTD_IS_TASK_ROW (row));
+  g_return_if_fail (gtk_revealer_get_child_revealed (row->priv->revealer));
+
+  g_debug ("Destroy row");
+
+  g_signal_connect_swapped (row->priv->revealer,
+                            "notify::child-revealed",
+                            G_CALLBACK (gtk_widget_destroy),
+                            row);
+
+  gtk_revealer_set_reveal_child (row->priv->revealer, FALSE);
 }

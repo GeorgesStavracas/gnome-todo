@@ -45,6 +45,10 @@ void                      gtd_task_row_set_task                 (GtdTaskRow     
 void                      gtd_task_row_set_list_name_visible    (GtdTaskRow          *row,
                                                                  gboolean             show_list_name);
 
+void                      gtd_task_row_reveal                   (GtdTaskRow          *row);
+
+void                      gtd_task_row_destroy                  (GtdTaskRow          *row);
+
 G_END_DECLS
 
 #endif /* GTD_TASK_ROW_H */

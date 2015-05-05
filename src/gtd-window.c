@@ -115,6 +115,7 @@ gtd_window__list_selected (GtkFlowBox      *flowbox,
   gtk_header_bar_set_subtitle (priv->headerbar, gtd_task_list_get_origin (list));
   gtk_header_bar_set_custom_title (priv->headerbar, NULL);
   gtd_list_view_set_task_list (priv->list_view, list);
+  gtd_list_view_set_show_completed (priv->list_view, FALSE);
   gtk_widget_show (GTK_WIDGET (priv->back_button));
 }
 

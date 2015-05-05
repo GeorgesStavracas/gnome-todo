@@ -92,9 +92,6 @@ gtd_list_view__done_button_clicked (GtkButton *button,
   show_completed = view->priv->show_completed;
 
   gtd_list_view_set_show_completed (view, !show_completed);
-  gtk_image_set_from_icon_name (view->priv->done_image,
-                                show_completed ? "zoom-in-symbolic" : "zoom-out-symbolic",
-                                GTK_ICON_SIZE_BUTTON);
 
   g_timeout_add (205,
                  (GSourceFunc) can_toggle_show_completed,
@@ -772,6 +769,11 @@ gtd_list_view_set_show_completed (GtdListView *view,
     {
 
       priv->show_completed = show_completed;
+
+      gtk_image_set_from_icon_name (view->priv->done_image,
+                                    show_completed ? "zoom-out-symbolic" : "zoom-in-symbolic",
+                                    GTK_ICON_SIZE_BUTTON);
+
 
       /* insert or remove list rows */
       if (show_completed)

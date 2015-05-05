@@ -68,6 +68,7 @@
                 <property name="tooltip_text" translatable="yes">Show or hide completed tasks</property>
                 <property name="border_width">12</property>
                 <property name="relief">none</property>
+                <signal name="clicked" handler="gtd_list_view__done_button_clicked" object="GtdListView" swapped="no" />
                 <child>
                   <object class="GtkBox" id="done_button_box">
                     <property name="visible">True</property>

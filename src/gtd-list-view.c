@@ -31,6 +31,7 @@ typedef struct
   GtkListBox            *listbox;
   GtdTaskRow            *new_task_row;
   GtkRevealer           *revealer;
+  GtkImage              *done_image;
 
   /* internal */
   gboolean               readonly;
@@ -64,7 +65,17 @@ static void
 gtd_list_view__done_button_clicked (GtkButton *button,
                                     gpointer   user_data)
 {
+  GtdListView *view = GTD_LIST_VIEW (user_data);
+  gboolean show_completed;
 
+  g_return_if_fail (GTD_IS_LIST_VIEW (view));
+
+  show_completed = view->priv->show_completed;
+
+  gtd_list_view_set_show_completed (view, !show_completed);
+  gtk_image_set_from_icon_name (view->priv->done_image,
+                                show_completed ? "zoom-in-symbolic" : "zoom-out-symbolic",
+                                GTK_ICON_SIZE_BUTTON);
 }
 
 static gint
@@ -137,10 +148,63 @@ gtd_list_view__add_task (GtdListView *view,
       gtk_list_box_insert (priv->listbox,
                            new_row,
                            0);
+      gtd_task_row_reveal (GTD_TASK_ROW (new_row));
     }
   else if (!gtk_revealer_get_reveal_child (priv->revealer))
     {
       gtk_revealer_set_reveal_child (priv->revealer, TRUE);
+    }
+}
+
+static void
+gtd_list_view__remove_task (GtdListView *view,
+                            GtdTask     *task)
+{
+  GtdListViewPrivate *priv = view->priv;
+  GList *children;
+  GList *l;
+
+  g_return_if_fail (GTD_IS_LIST_VIEW (view));
+  g_return_if_fail (GTD_IS_TASK (task));
+
+  children = gtk_container_get_children (GTK_CONTAINER (priv->listbox));
+
+  for (l = children; l != NULL; l = l->next)
+    {
+      if (!gtd_task_row_get_new_task_mode (l->data) &&
+          gtd_task_row_get_task (l->data) == task)
+        {
+          gtd_task_row_destroy (l->data);
+        }
+    }
+
+  if (children)
+    g_list_free (children);
+}
+
+static void
+gtd_list_view__task_completed (GObject    *object,
+                               GParamSpec *spec,
+                               gpointer    user_data)
+{
+  GtdListViewPrivate *priv = GTD_LIST_VIEW (user_data)->priv;
+  GtdTask *task = GTD_TASK (object);
+
+  g_return_if_fail (GTD_IS_TASK (object));
+  g_return_if_fail (GTD_IS_LIST_VIEW (user_data));
+
+  gtd_manager_update_task (priv->manager, task);
+
+  if (!priv->show_completed)
+    {
+      if (gtd_task_get_complete (task))
+        gtd_list_view__remove_task (GTD_LIST_VIEW (user_data), task);
+      else
+        gtd_list_view__add_task (GTD_LIST_VIEW (user_data), task);
+    }
+  else
+    {
+      gtk_list_box_invalidate_sort (priv->listbox);
     }
 }
 
@@ -344,6 +408,9 @@ gtd_list_view_class_init (GtdListViewClass *klass)
 
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, listbox);
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, revealer);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdListView, done_image);
+
+  gtk_widget_class_bind_template_callback (widget_class, gtd_list_view__done_button_clicked);
 }
 
 static void
@@ -578,6 +645,11 @@ gtd_list_view_set_task_list (GtdListView *view,
       for (l = task_list; l != NULL; l = l->next)
         {
           gtd_list_view__add_task (view, l->data);
+
+          g_signal_connect (l->data,
+                            "notify::complete",
+                            G_CALLBACK (gtd_list_view__task_completed),
+                            view);
         }
 
       g_list_free (task_list);
@@ -697,6 +769,8 @@ gtd_list_view_set_show_completed (GtdListView *view,
               gtk_list_box_insert (priv->listbox,
                                    new_row,
                                    0);
+
+              gtd_task_row_reveal (GTD_TASK_ROW (new_row));
             }
 
             if (list_of_tasks)
@@ -714,7 +788,7 @@ gtd_list_view_set_show_completed (GtdListView *view,
               if (!gtd_task_row_get_new_task_mode (l->data) &&
                   gtd_task_get_complete (gtd_task_row_get_task (l->data)))
                 {
-                  gtk_widget_destroy (l->data);
+                  gtd_task_row_destroy (l->data);
                 }
             }
 

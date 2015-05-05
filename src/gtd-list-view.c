@@ -52,6 +52,11 @@ struct _GtdListView
   GtdListViewPrivate *priv;
 };
 
+/* prototypes */
+static void             gtd_list_view__task_completed                 (GObject          *object,
+                                                                       GParamSpec       *spec,
+                                                                       gpointer          user_data);
+
 G_DEFINE_TYPE_WITH_PRIVATE (GtdListView, gtd_list_view, GTK_TYPE_BOX)
 
 enum {
@@ -146,7 +151,12 @@ gtd_list_view__clear_list (GtdListView *view)
   for (l = children; l != NULL; l = l->next)
     {
       if (l->data != view->priv->new_task_row)
-        gtk_widget_destroy (l->data);
+        {
+          g_signal_handlers_disconnect_by_func (gtd_task_row_get_task (l->data),
+                                                gtd_list_view__task_completed,
+                                                view);
+          gtk_widget_destroy (l->data);
+        }
     }
 
   gtk_revealer_set_reveal_child (view->priv->revealer, FALSE);

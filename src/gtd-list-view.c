@@ -32,6 +32,7 @@ typedef struct
   GtdTaskRow            *new_task_row;
   GtkRevealer           *revealer;
   GtkImage              *done_image;
+  GtkLabel              *done_label;
 
   /* internal */
   gboolean               can_toggle;
@@ -67,6 +68,22 @@ enum {
   PROP_SHOW_LIST_NAME,
   LAST_PROP
 };
+
+static void
+gtd_list_view__update_done_label (GtdListView *view)
+{
+  gchar *new_label;
+
+  g_return_if_fail (GTD_IS_LIST_VIEW (view));
+
+  new_label = g_strdup_printf ("%s (%d)",
+                               _("Done"),
+                               view->priv->complete_tasks);
+
+  gtk_label_set_label (view->priv->done_label, new_label);
+
+  g_free (new_label);
+}
 
 static gboolean
 can_toggle_show_completed (GtdListView *view)
@@ -187,6 +204,8 @@ gtd_list_view__add_task (GtdListView *view,
     {
       priv->complete_tasks++;
 
+      gtd_list_view__update_done_label (view);
+
       if (!gtk_revealer_get_reveal_child (priv->revealer))
         gtk_revealer_set_reveal_child (priv->revealer, TRUE);
     }
@@ -239,6 +258,7 @@ gtd_list_view__task_completed (GObject    *object,
   else
     priv->complete_tasks--;
 
+  gtd_list_view__update_done_label (GTD_LIST_VIEW (user_data));
   gtk_revealer_set_reveal_child (priv->revealer, priv->complete_tasks > 0);
 
   if (!priv->show_completed)
@@ -455,6 +475,7 @@ gtd_list_view_class_init (GtdListViewClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, listbox);
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, revealer);
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, done_image);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdListView, done_label);
 
   gtk_widget_class_bind_template_callback (widget_class, gtd_list_view__done_button_clicked);
 }

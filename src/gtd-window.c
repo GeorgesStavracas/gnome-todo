@@ -28,6 +28,7 @@
 typedef struct
 {
   GtkButton                     *back_button;
+  GtkColorButton                *color_button;
   GtkHeaderBar                  *headerbar;
   GtkFlowBox                    *lists_flowbox;
   GtkStack                      *main_stack;
@@ -59,6 +60,28 @@ enum {
   PROP_MANAGER,
   LAST_PROP
 };
+
+static void
+gtd_window__list_color_set (GtkColorChooser *button,
+                            gpointer         user_data)
+{
+  GtdWindowPrivate *priv = GTD_WINDOW (user_data)->priv;
+  GtdTaskList *list;
+  GdkRGBA new_color;
+
+  g_return_if_fail (GTD_IS_WINDOW (user_data));
+  g_return_if_fail (gtd_list_view_get_task_list (priv->list_view));
+
+  list = gtd_list_view_get_task_list (priv->list_view);
+
+  g_debug ("%s: %s: %s",
+           G_STRFUNC,
+           _("Setting new color for task list"),
+           gtd_task_list_get_name (list));
+
+  gtk_color_chooser_get_rgba (button, &new_color);
+  gtd_task_list_set_color (list, &new_color);
+}
 
 static gint
 gtd_window__listbox_sort_func (GtdTaskListItem *a,
@@ -115,6 +138,7 @@ gtd_window__back_button_clicked (GtkButton *button,
   gtk_stack_set_visible_child_name (priv->main_stack, "overview");
   gtk_header_bar_set_custom_title (priv->headerbar, GTK_WIDGET (priv->stack_switcher));
   gtk_widget_hide (GTK_WIDGET (priv->back_button));
+  gtk_widget_hide (GTK_WIDGET (priv->color_button));
 }
 
 static void
@@ -124,11 +148,19 @@ gtd_window__list_selected (GtkFlowBox      *flowbox,
 {
   GtdWindowPrivate *priv = GTD_WINDOW (user_data)->priv;
   GtdTaskList *list;
+  GdkRGBA *list_color;
 
   g_return_if_fail (GTD_IS_WINDOW (user_data));
   g_return_if_fail (GTD_IS_TASK_LIST_ITEM (item));
 
   list = gtd_task_list_item_get_list (item);
+  list_color = gtd_task_list_get_color (list);
+
+  g_signal_handlers_block_by_func (priv->color_button,
+                                   gtd_window__list_color_set,
+                                   user_data);
+
+  gtk_color_chooser_set_rgba (GTK_COLOR_CHOOSER (priv->color_button), list_color);
 
   gtk_stack_set_visible_child_name (priv->main_stack, "tasks");
   gtk_header_bar_set_title (priv->headerbar, gtd_task_list_get_name (list));
@@ -137,6 +169,13 @@ gtd_window__list_selected (GtkFlowBox      *flowbox,
   gtd_list_view_set_task_list (priv->list_view, list);
   gtd_list_view_set_show_completed (priv->list_view, FALSE);
   gtk_widget_show (GTK_WIDGET (priv->back_button));
+  gtk_widget_show (GTK_WIDGET (priv->color_button));
+
+  g_signal_handlers_unblock_by_func (priv->color_button,
+                                     gtd_window__list_color_set,
+                                     user_data);
+
+  gdk_rgba_free (list_color);
 }
 
 static void
@@ -259,6 +298,7 @@ gtd_window_class_init (GtdWindowClass *klass)
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/window.ui");
 
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, back_button);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, color_button);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, headerbar);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, lists_flowbox);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, list_view);
@@ -270,6 +310,7 @@ gtd_window_class_init (GtdWindowClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, stack_switcher);
 
   gtk_widget_class_bind_template_callback (widget_class, gtd_window__back_button_clicked);
+  gtk_widget_class_bind_template_callback (widget_class, gtd_window__list_color_set);
   gtk_widget_class_bind_template_callback (widget_class, gtd_window__list_selected);
 }
 

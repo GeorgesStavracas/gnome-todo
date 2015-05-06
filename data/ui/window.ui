@@ -411,6 +411,17 @@
             <property name="position">3</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkColorButton" id="color_button">
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <signal name="color_set" handler="gtd_window__list_color_set" object="GtdWindow" swapped="no" />
+          </object>
+          <packing>
+            <property name="pack_type">end</property>
+            <property name="position">4</property>
+          </packing>
+        </child>
       </object>
     </child>
   </template>

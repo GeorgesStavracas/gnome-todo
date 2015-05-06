@@ -76,6 +76,31 @@ enum {
 };
 
 static void
+gtd_list_view__color_changed (GObject    *object,
+                              GParamSpec *spec,
+                              gpointer    user_data)
+{
+  GtdListViewPrivate *priv = GTD_LIST_VIEW (user_data)->priv;
+  GdkRGBA *color;
+  gchar *color_str;
+  gchar *parsed_css;
+
+  /* Add the color to provider */
+  color = gtd_task_list_get_color (GTD_TASK_LIST (object));
+  color_str = gdk_rgba_to_string (color);
+
+  parsed_css = g_strdup_printf (COLOR_TEMPLATE, color_str);
+
+  gtk_css_provider_load_from_data (priv->color_provider,
+                                   parsed_css,
+                                   -1,
+                                   NULL);
+
+  gdk_rgba_free (color);
+  g_free (color_str);
+}
+
+static void
 gtd_list_view__update_done_label (GtdListView *view)
 {
   gchar *new_label;
@@ -717,6 +742,9 @@ gtd_list_view_set_task_list (GtdListView *view,
           g_signal_handlers_disconnect_by_func (priv->task_list,
                                                 gtd_list_view__task_added,
                                                 view);
+          g_signal_handlers_disconnect_by_func (priv->task_list,
+                                                gtd_list_view__color_changed,
+                                                view);
         }
 
       /* Add the color to provider */
@@ -759,6 +787,10 @@ gtd_list_view_set_task_list (GtdListView *view,
       g_signal_connect (list,
                         "task-added",
                         G_CALLBACK (gtd_list_view__task_added),
+                        view);
+      g_signal_connect (list,
+                        "notify::color",
+                        G_CALLBACK (gtd_list_view__color_changed),
                         view);
     }
 }

@@ -81,6 +81,8 @@ gtd_window__list_color_set (GtkColorChooser *button,
 
   gtk_color_chooser_get_rgba (button, &new_color);
   gtd_task_list_set_color (list, &new_color);
+
+  gtd_manager_save_task_list (priv->manager, list);
 }
 
 static gint

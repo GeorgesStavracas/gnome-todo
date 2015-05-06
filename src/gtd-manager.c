@@ -64,6 +64,60 @@ enum
 static guint signals[NUM_SIGNALS] = { 0, };
 
 static void
+gtd_manager__commit_source_finished (GObject      *registry,
+                                     GAsyncResult *result,
+                                     gpointer      user_data)
+{
+  GtdManagerPrivate *priv = GTD_MANAGER (user_data)->priv;
+  GError *error = NULL;
+
+  g_return_if_fail (GTD_IS_MANAGER (user_data));
+
+  gtd_object_set_ready (GTD_OBJECT (user_data), TRUE);
+  e_source_registry_commit_source_finish (E_SOURCE_REGISTRY (registry),
+                                          result,
+                                          &error);
+
+  if (error)
+    {
+      g_warning ("%s: %s: %s",
+                 G_STRFUNC,
+                 _("Error saving task list"),
+                 error->message);
+
+      g_error_free (error);
+      return;
+    }
+}
+
+static void
+gtd_manager__remove_source_finished (GObject      *source,
+                                     GAsyncResult *result,
+                                     gpointer      user_data)
+{
+  GtdManagerPrivate *priv = GTD_MANAGER (user_data)->priv;
+  GError *error = NULL;
+
+  g_return_if_fail (GTD_IS_MANAGER (user_data));
+
+  gtd_object_set_ready (GTD_OBJECT (user_data), TRUE);
+  e_source_remove_finish (E_SOURCE (source),
+                          result,
+                          &error);
+
+  if (error)
+    {
+      g_warning ("%s: %s: %s",
+                 G_STRFUNC,
+                 _("Error removing task list"),
+                 error->message);
+
+      g_error_free (error);
+      return;
+    }
+}
+
+static void
 gtd_manager__create_task_finished (GObject      *client,
                                    GAsyncResult *result,
                                    gpointer      user_data)
@@ -606,4 +660,61 @@ gtd_manager_update_task (GtdManager *manager,
                               NULL, // We won't cancel the operation
                               (GAsyncReadyCallback) gtd_manager__update_task_finished,
                               task);
+}
+
+/**
+ * gtd_manager_remove_task_list:
+ * @manager: a #GtdManager
+ * @list: a #GtdTaskList
+ *
+ * Deletes @list from the registry.
+ *
+ * Returns:
+ */
+void
+gtd_manager_remove_task_list (GtdManager  *manager,
+                              GtdTaskList *list)
+{
+  ESource *source;
+
+  g_return_if_fail (GTD_IS_MANAGER (manager));
+  g_return_if_fail (GTD_IS_TASK_LIST (list));
+  g_return_if_fail (gtd_task_list_get_source (list));
+
+  source = gtd_task_list_get_source (list);
+
+  gtd_object_set_ready (GTD_OBJECT (manager), FALSE);
+  e_source_remove (source,
+                   NULL,
+                   (GAsyncReadyCallback) gtd_manager__remove_source_finished,
+                   manager);
+}
+
+/**
+ * gtd_manager_save_task_list:
+ * @manager: a #GtdManager
+ * @list: a #GtdTaskList
+ *
+ * Save or create @list.
+ *
+ * Returns:
+ */
+void
+gtd_manager_save_task_list (GtdManager  *manager,
+                            GtdTaskList *list)
+{
+  ESource *source;
+
+  g_return_if_fail (GTD_IS_MANAGER (manager));
+  g_return_if_fail (GTD_IS_TASK_LIST (list));
+  g_return_if_fail (gtd_task_list_get_source (list));
+
+  source = gtd_task_list_get_source (list);
+
+  gtd_object_set_ready (GTD_OBJECT (manager), FALSE);
+  e_source_registry_commit_source (manager->priv->source_registry,
+                                   source,
+                                   NULL,
+                                   (GAsyncReadyCallback) gtd_manager__commit_source_finished,
+                                   manager);
 }

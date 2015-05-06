@@ -60,6 +60,26 @@ enum {
   LAST_PROP
 };
 
+static gint
+gtd_window__listbox_sort_func (GtdTaskListItem *a,
+                               GtdTaskListItem *b,
+                               gpointer         user_data)
+{
+  GtdTaskList *l1;
+  GtdTaskList *l2;
+  gint retval = 0;
+
+  l1 = gtd_task_list_item_get_list (a);
+  l2 = gtd_task_list_item_get_list (b);
+
+  retval = g_strcmp0 (gtd_task_list_get_origin (l1), gtd_task_list_get_origin (l2));
+
+  if (retval != 0)
+    return retval;
+
+  return g_strcmp0 (gtd_task_list_get_name (l1), gtd_task_list_get_name (l2));
+}
+
 static void
 gtd_window__manager_ready_changed (GObject    *source,
                                    GParamSpec *spec,
@@ -135,6 +155,19 @@ gtd_window__list_added (GtdManager  *manager,
                        -1);
 }
 
+static void
+gtd_window_constructed (GObject *object)
+{
+  GtdWindowPrivate *priv = GTD_WINDOW (object)->priv;
+
+  G_OBJECT_CLASS (gtd_window_parent_class)->constructed (object);
+
+  gtk_flow_box_set_sort_func (priv->lists_flowbox,
+                              (GtkFlowBoxSortFunc) gtd_window__listbox_sort_func,
+                              NULL,
+                              NULL);
+}
+
 GtkWidget*
 gtd_window_new (GtdApplication *application)
 {
@@ -205,6 +238,7 @@ gtd_window_class_init (GtdWindowClass *klass)
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 
   object_class->finalize = gtd_window_finalize;
+  object_class->constructed = gtd_window_constructed;
   object_class->get_property = gtd_window_get_property;
   object_class->set_property = gtd_window_set_property;
 

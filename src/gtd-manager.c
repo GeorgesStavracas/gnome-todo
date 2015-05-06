@@ -22,10 +22,12 @@
 
 #include <glib/gi18n.h>
 #include <libecal/libecal.h>
+#include <libedataserverui/libedataserverui.h>
 
 typedef struct
 {
   GHashTable            *clients;
+  ECredentialsPrompter  *credentials_prompter;
   ESourceRegistry       *source_registry;
 
   /*
@@ -203,6 +205,108 @@ gtd_manager__update_task_finished (GObject      *client,
 }
 
 static void
+gtd_manager__invoke_authentication (GObject      *source_object,
+                                    GAsyncResult *result,
+                                    gpointer      user_data)
+{
+  ESource *source = E_SOURCE (source_object);
+  GError *error = NULL;
+  gboolean canceled;
+
+  e_source_invoke_authenticate_finish (source,
+                                       result,
+                                       &error);
+
+  canceled = g_error_matches (error,
+                                   G_IO_ERROR,
+                                   G_IO_ERROR_CANCELLED);
+
+  if (!canceled)
+    {
+      g_warning ("%s: %s (%s): %s",
+                 G_STRFUNC,
+                 _("Failed to prompt for credentials"),
+                 e_source_get_uid (source),
+                 error->message);
+    }
+
+  g_clear_error (&error);
+}
+
+static void
+gtd_manager__credentials_prompt_done (GObject      *source_object,
+                                      GAsyncResult *result,
+                                      gpointer      user_data)
+{
+  ETrustPromptResponse response = E_TRUST_PROMPT_RESPONSE_UNKNOWN;
+  ESource *source = E_SOURCE (source_object);
+  GError *error = NULL;
+
+  e_trust_prompt_run_for_source_finish (source, result, &response, &error);
+
+  if (error)
+    {
+      g_warning ("%s: %s '%s': %s",
+                 G_STRFUNC,
+                 _("Failed to prompt for credentials for"),
+                 e_source_get_display_name (source),
+                 error->message);
+
+    }
+  else if (response == E_TRUST_PROMPT_RESPONSE_ACCEPT || response == E_TRUST_PROMPT_RESPONSE_ACCEPT_TEMPORARILY)
+    {
+      /* Use NULL credentials to reuse those from the last time. */
+      e_source_invoke_authenticate (source,
+                                    NULL,
+                                    NULL /* cancellable */,
+                                    gtd_manager__invoke_authentication,
+                                    NULL);
+    }
+
+  g_clear_error (&error);
+}
+
+static void
+gtd_manager__credentials_required (ESourceRegistry          *registry,
+                                   ESource                  *source,
+                                   ESourceCredentialsReason  reason,
+                                   const gchar              *certificate_pem,
+                                   GTlsCertificateFlags      certificate_errors,
+                                   const GError             *error,
+                                   gpointer                  user_data)
+{
+  GtdManagerPrivate *priv;
+
+  g_return_if_fail (GTD_IS_MANAGER (user_data));
+
+  priv = GTD_MANAGER (user_data)->priv;
+
+  if (e_credentials_prompter_get_auto_prompt_disabled_for (priv->credentials_prompter, source))
+    return;
+
+  if (reason == E_SOURCE_CREDENTIALS_REASON_SSL_FAILED)
+    {
+      e_trust_prompt_run_for_source (e_credentials_prompter_get_dialog_parent (priv->credentials_prompter),
+                                     source,
+                                     certificate_pem,
+                                     certificate_errors,
+                                     error ? error->message : NULL,
+                                     TRUE, // allow saving sources
+                                     NULL, // we won't cancel the operation
+                                     gtd_manager__credentials_prompt_done,
+                                     NULL);
+    }
+  else if (error && reason == E_SOURCE_CREDENTIALS_REASON_ERROR)
+    {
+      g_warning ("%s: %s '%s': %s",
+                 G_STRFUNC,
+                 _("Authentication failure"),
+                 e_source_get_display_name (source),
+                 error->message);
+    }
+}
+
+static void
 gtd_manager__fill_task_list (GObject      *client,
                              GAsyncResult *result,
                              gpointer      user_data)
@@ -365,6 +469,7 @@ gtd_manager__source_registry_finish_cb (GObject      *source_object,
   GError *error = NULL;
 
   priv->source_registry = e_source_registry_new_finish (result, &error);
+  priv->credentials_prompter = e_credentials_prompter_new (priv->source_registry);
 
   if (error != NULL)
     {
@@ -372,6 +477,21 @@ gtd_manager__source_registry_finish_cb (GObject      *source_object,
       g_error_free (error);
       return;
     }
+
+  /* First of all, disable authentication dialog for non-tasklists sources */
+  sources = e_source_registry_list_sources (priv->source_registry, NULL);
+
+  for (l = sources; l != NULL; l = g_list_next (l))
+    {
+      ESource *source = E_SOURCE (l->data);
+
+      /* Mark for skip also currently disabled sources */
+      e_credentials_prompter_set_auto_prompt_disabled_for (priv->credentials_prompter,
+                                                           source,
+                                                           !e_source_has_extension (source, E_SOURCE_EXTENSION_CALENDAR));
+    }
+
+  g_list_free_full (sources, g_object_unref);
 
   /* Load task list sources */
   sources = e_source_registry_list_sources (priv->source_registry,
@@ -402,6 +522,13 @@ gtd_manager__source_registry_finish_cb (GObject      *source_object,
                             "source-removed",
                             G_CALLBACK (gtd_manager__remove_source),
                             user_data);
+
+  g_signal_connect (priv->source_registry,
+                    "credentials-required",
+                    G_CALLBACK (gtd_manager__credentials_required),
+                    user_data);
+
+  e_credentials_prompter_process_awaiting_credentials (priv->credentials_prompter);
 }
 
 static void

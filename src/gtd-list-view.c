@@ -33,6 +33,7 @@ typedef struct
   GtkRevealer           *revealer;
   GtkImage              *done_image;
   GtkLabel              *done_label;
+  GtkScrolledWindow     *scrolled_window;
 
   /* internal */
   gboolean               can_toggle;
@@ -43,6 +44,9 @@ typedef struct
   GList                 *list;
   GtdTaskList           *task_list;
   GtdManager            *manager;
+
+  /* color provider */
+  GtkCssProvider        *color_provider;
 } GtdListViewPrivate;
 
 struct _GtdListView
@@ -52,6 +56,8 @@ struct _GtdListView
   /*<private>*/
   GtdListViewPrivate *priv;
 };
+
+#define COLOR_TEMPLATE "GtkScrolledWindow {background-color: %s;}"
 
 /* prototypes */
 static void             gtd_list_view__task_completed                 (GObject          *object,
@@ -360,6 +366,13 @@ gtd_list_view_constructed (GObject *object)
 
   G_OBJECT_CLASS (gtd_list_view_parent_class)->constructed (object);
 
+  /* css provider */
+  self->priv->color_provider = gtk_css_provider_new ();
+
+  gtk_style_context_add_provider (gtk_widget_get_style_context (GTK_WIDGET (self->priv->scrolled_window)),
+                                  GTK_STYLE_PROVIDER (self->priv->color_provider),
+                                  GTK_STYLE_PROVIDER_PRIORITY_APPLICATION + 2);
+
   /* show a nifty separator between lines */
   gtk_list_box_set_header_func (self->priv->listbox,
                                 (GtkListBoxUpdateHeaderFunc) gtd_list_view__header_func,
@@ -476,6 +489,7 @@ gtd_list_view_class_init (GtdListViewClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, revealer);
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, done_image);
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, done_label);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdListView, scrolled_window);
 
   gtk_widget_class_bind_template_callback (widget_class, gtd_list_view__done_button_clicked);
 }
@@ -689,6 +703,9 @@ gtd_list_view_set_task_list (GtdListView *view,
 
   if (priv->task_list != list)
     {
+      GdkRGBA *color;
+      gchar *color_str;
+      gchar *parsed_css;
       GList *task_list;
       GList *l;
 
@@ -702,6 +719,23 @@ gtd_list_view_set_task_list (GtdListView *view,
                                                 view);
         }
 
+      /* Add the color to provider */
+      color = gtd_task_list_get_color (list);
+      color_str = gdk_rgba_to_string (color);
+
+      parsed_css = g_strdup_printf (COLOR_TEMPLATE, color_str);
+
+      g_debug ("setting style for provider: %s", parsed_css);
+
+      gtk_css_provider_load_from_data (priv->color_provider,
+                                       parsed_css,
+                                       -1,
+                                       NULL);
+
+      gdk_rgba_free (color);
+      g_free (color_str);
+
+      /* Load taska */
       priv->task_list = list;
 
       /* clear previous tasks */

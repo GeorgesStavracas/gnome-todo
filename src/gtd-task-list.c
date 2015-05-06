@@ -52,6 +52,7 @@ static guint signals[NUM_SIGNALS] = { 0, };
 enum
 {
   PROP_0,
+  PROP_COLOR,
   PROP_NAME,
   PROP_ORIGIN,
   PROP_SOURCE,
@@ -76,6 +77,10 @@ gtd_task_list_get_property (GObject    *object,
 
   switch (prop_id)
     {
+    case PROP_COLOR:
+      g_value_set_boxed (value, gtd_task_list_get_color (self));
+      break;
+
     case PROP_NAME:
       g_value_set_string (value, e_source_get_display_name (self->priv->source));
       break;
@@ -103,6 +108,10 @@ gtd_task_list_set_property (GObject      *object,
 
   switch (prop_id)
     {
+    case PROP_COLOR:
+      gtd_task_list_set_color (self, g_value_get_boxed (value));
+      break;
+
     case PROP_NAME:
       gtd_task_list_set_name (self, g_value_get_string (value));
       break;
@@ -128,6 +137,20 @@ gtd_task_list_class_init (GtdTaskListClass *klass)
   object_class->finalize = gtd_task_list_finalize;
   object_class->get_property = gtd_task_list_get_property;
   object_class->set_property = gtd_task_list_set_property;
+
+  /**
+   * GtdTaskList::color:
+   *
+   * The color of the list.
+   */
+  g_object_class_install_property (
+        object_class,
+        PROP_COLOR,
+        g_param_spec_boxed ("color",
+                            _("Color of the list"),
+                            _("The color of the list"),
+                            GDK_TYPE_RGBA,
+                            G_PARAM_READWRITE));
 
   /**
    * GtdTaskList::name:
@@ -247,6 +270,59 @@ gtd_task_list_new (ESource     *source,
                        "uid", e_source_get_uid (source),
                        "origin", origin,
                        NULL);
+}
+
+/**
+ * gtd_task_list_get_color:
+ * @list: a #GtdTaskList
+ *
+ * Retrieves the color of %list. It is guarantee that it always returns a
+ * color, given a valid #GtdTaskList.
+ *
+ * Returns: (transfer full): the color of %list. Free with %gdk_rgba_free after use.
+ */
+GdkRGBA*
+gtd_task_list_get_color (GtdTaskList *list)
+{
+  ESourceSelectable *selectable;
+  GdkRGBA color;
+
+  g_return_val_if_fail (GTD_IS_TASK_LIST (list), NULL);
+  g_return_val_if_fail (E_IS_SOURCE (list->priv->source), NULL);
+
+  selectable = E_SOURCE_SELECTABLE (e_source_get_extension (list->priv->source, E_SOURCE_EXTENSION_CALENDAR));
+
+  if (!gdk_rgba_parse (&color, e_source_selectable_get_color (selectable)))
+    gdk_rgba_parse (&color, "#becedd"); /* calendar default colour */
+
+  return gdk_rgba_copy (&color);
+}
+
+void
+gtd_task_list_set_color (GtdTaskList   *list,
+                         const GdkRGBA *color)
+{
+  GdkRGBA *current_color;
+
+  g_return_if_fail (GTD_IS_TASK_LIST (list));
+
+  current_color = gtd_task_list_get_color (list);
+
+  if (!gdk_rgba_equal (current_color, color))
+    {
+      ESourceSelectable *selectable;
+      gchar *color_str;
+
+      selectable = E_SOURCE_SELECTABLE (e_source_get_extension (list->priv->source, E_SOURCE_EXTENSION_CALENDAR));
+      color_str = gdk_rgba_to_string (color);
+
+      e_source_selectable_set_color (selectable, color_str);
+      g_free (color_str);
+
+      g_object_notify (G_OBJECT (list), "color");
+    }
+
+  gdk_rgba_free (current_color);
 }
 
 /**

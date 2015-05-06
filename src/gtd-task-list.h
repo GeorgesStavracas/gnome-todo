@@ -24,6 +24,7 @@
 #include "gtd-object.h"
 
 #include <libecal/libecal.h>
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
@@ -33,6 +34,11 @@ G_DECLARE_FINAL_TYPE (GtdTaskList, gtd_task_list, GTD, TASK_LIST, GtdObject)
 
 GtdTaskList*            gtd_task_list_new                       (ESource                *source,
                                                                  const gchar            *origin);
+
+GdkRGBA*                gtd_task_list_get_color                 (GtdTaskList            *list);
+
+void                    gtd_task_list_set_color                 (GtdTaskList            *list,
+                                                                 const GdkRGBA          *color);
 
 const gchar*            gtd_task_list_get_name                  (GtdTaskList            *list);
 

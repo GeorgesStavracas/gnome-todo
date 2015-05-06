@@ -429,10 +429,16 @@ gtd_task_set_complete (GtdTask  *task,
   if (gtd_task_get_complete (task) != complete)
     {
       icaltimetype *dt;
+      icalproperty_status status;
+      gint percent;
 
       if (complete)
         {
           GDateTime *now = g_date_time_new_now_local ();
+          icaltimezone *tz;
+
+          percent = 100;
+          status = ICAL_STATUS_COMPLETED;
 
           dt = g_new0 (icaltimetype, 1);
           dt->year = g_date_time_get_year (now);
@@ -441,16 +447,24 @@ gtd_task_set_complete (GtdTask  *task,
           dt->hour = g_date_time_get_hour (now);
           dt->minute = g_date_time_get_minute (now);
           dt->second = g_date_time_get_seconds (now);
-          dt->is_date = (dt->hour == 0 &&
-                         dt->minute == 0 &&
-                         dt->second == 0);
-          dt->zone = icaltimezone_get_builtin_timezone_from_tzid (g_date_time_get_timezone_abbreviation (now));
+          dt->is_date = 0;
+          dt->is_utc = 1;
+
+          /* convert timezone */
+          icaltimezone_convert_time (dt,
+                                     tz,
+                                     icaltimezone_get_utc_timezone ());
+
         }
       else
         {
           dt = NULL;
+          percent = 0;
+          status = ICAL_STATUS_NEEDSACTION;
         }
 
+      e_cal_component_set_percent_as_int (task->priv->component, percent);
+      e_cal_component_set_status (task->priv->component, status);
       e_cal_component_set_completed (task->priv->component, dt);
 
       if (dt)

@@ -33,7 +33,7 @@ typedef struct
   GtkRevealer           *revealer;
   GtkImage              *done_image;
   GtkLabel              *done_label;
-  GtkScrolledWindow     *scrolled_window;
+  GtkScrolledWindow     *viewport;
 
   /* internal */
   gboolean               can_toggle;
@@ -57,7 +57,7 @@ struct _GtdListView
   GtdListViewPrivate *priv;
 };
 
-#define COLOR_TEMPLATE "GtkScrolledWindow {background-color: %s;}"
+#define COLOR_TEMPLATE "GtkViewport {background-color: %s;}"
 
 /* prototypes */
 static void             gtd_list_view__task_completed                 (GObject          *object,
@@ -394,7 +394,7 @@ gtd_list_view_constructed (GObject *object)
   /* css provider */
   self->priv->color_provider = gtk_css_provider_new ();
 
-  gtk_style_context_add_provider (gtk_widget_get_style_context (GTK_WIDGET (self->priv->scrolled_window)),
+  gtk_style_context_add_provider (gtk_widget_get_style_context (GTK_WIDGET (self->priv->viewport)),
                                   GTK_STYLE_PROVIDER (self->priv->color_provider),
                                   GTK_STYLE_PROVIDER_PRIORITY_APPLICATION + 2);
 
@@ -514,7 +514,7 @@ gtd_list_view_class_init (GtdListViewClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, revealer);
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, done_image);
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, done_label);
-  gtk_widget_class_bind_template_child_private (widget_class, GtdListView, scrolled_window);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdListView, viewport);
 
   gtk_widget_class_bind_template_callback (widget_class, gtd_list_view__done_button_clicked);
 }

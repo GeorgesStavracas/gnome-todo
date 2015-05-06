@@ -293,7 +293,7 @@ gtd_task_list_get_color (GtdTaskList *list)
   selectable = E_SOURCE_SELECTABLE (e_source_get_extension (list->priv->source, E_SOURCE_EXTENSION_CALENDAR));
 
   if (!gdk_rgba_parse (&color, e_source_selectable_get_color (selectable)))
-    gdk_rgba_parse (&color, "#becedd"); /* calendar default colour */
+    gdk_rgba_parse (&color, "#ffffff"); /* calendar default colour */
 
   return gdk_rgba_copy (&color);
 }

@@ -759,7 +759,7 @@ gtd_task_set_priority (GtdTask *task,
   if (priority != current)
     {
       e_cal_component_set_priority (task->priv->component, &priority);
-      g_object_notify (G_OBJECT (task), "position");
+      g_object_notify (G_OBJECT (task), "priority");
     }
 }
 

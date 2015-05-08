@@ -6,3 +6,18 @@ GtdTaskListItem.thumbnail {
     background-image: url("bg.png");
     background-repeat: round;
 }
+
+GtdArrowFrame {
+    border-bottom-width: 0px;
+    border-top-width: 0px;
+    background-color: @theme_bg_color;
+    border-color: @borders;
+}
+
+GtdArrowFrame:dir(ltr) {
+    border-right-width: 0px;
+}
+
+GtdArrowFrame:dir(rtl) {
+    border-left-width: 0px;
+}

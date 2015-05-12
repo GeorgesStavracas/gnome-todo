@@ -889,7 +889,7 @@ gtd_task_compare (GtdTask *t1,
   p1 = gtd_task_get_priority (t1);
   p2 = gtd_task_get_priority (t2);
 
-  retval = p1 - p2;
+  retval = p2 - p1;
 
   if (retval != 0)
     return retval;
@@ -907,7 +907,7 @@ gtd_task_compare (GtdTask *t1,
   else if (!dt2)
     retval = -1;
   else
-    retval = g_date_time_compare (t1, t2);
+    retval = -1 * g_date_time_compare (t1, t2);
 
   if (dt1)
     g_date_time_unref (dt1);

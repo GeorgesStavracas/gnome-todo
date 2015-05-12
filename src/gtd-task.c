@@ -478,9 +478,9 @@ gtd_task_set_complete (GtdTask  *task,
  * gtd_task_get_description:
  * @task: a #GtdTask
  *
- * Retrieves the description of the task, or %NULL.
+ * Retrieves the description of the task.
  *
- * Returns: (transfer none): the description of @task, or %NULL
+ * Returns: (transfer none): the description of @task
  */
 const gchar*
 gtd_task_get_description (GtdTask *task)
@@ -528,7 +528,7 @@ gtd_task_get_description (GtdTask *task)
   g_free (desc);
   e_cal_component_free_text_list (text_list);
 
-  return task->priv->description;
+  return task->priv->description ? task->priv->description : "";
 }
 
 /**

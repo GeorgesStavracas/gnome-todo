@@ -15,6 +15,10 @@ gnome_todo_SOURCES = \
 	$(BUILT_SOURCES) \
 	gtd-application.c \
 	gtd-application.h \
+	gtd-arrow-frame.c \
+	gtd-arrow-frame.h \
+	gtd-edit-pane.c \
+	gtd-edit-pane.h \
 	gtd-enums.h \
 	gtd-list-view.c \
 	gtd-list-view.h \

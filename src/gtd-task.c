@@ -617,6 +617,7 @@ gtd_task_set_due_date (GtdTask   *task,
     {
       ECalComponentDateTime comp_dt;
       icaltimetype *idt;
+      gboolean changed = FALSE;
 
       comp_dt.value = NULL;
       comp_dt.tzid = NULL;
@@ -645,14 +646,14 @@ gtd_task_set_due_date (GtdTask   *task,
 
           g_date_time_unref (dt);
 
-          g_object_notify (G_OBJECT (task), "due-date");
+          changed = TRUE;
         }
       else if (!dt)
         {
           idt = NULL;
           comp_dt.tzid = NULL;
 
-          g_object_notify (G_OBJECT (task), "due-date");
+          changed = TRUE;
         }
 
       comp_dt.value = idt;
@@ -660,6 +661,9 @@ gtd_task_set_due_date (GtdTask   *task,
       e_cal_component_set_dtend (task->priv->component, &comp_dt);
 
       e_cal_component_free_datetime (&comp_dt);
+
+      if (changed)
+        g_object_notify (G_OBJECT (task), "due-date");
     }
 
   if (current_dt)

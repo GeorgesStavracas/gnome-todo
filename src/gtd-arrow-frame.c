@@ -69,6 +69,7 @@ gtd_arrow_frame_get_property (GObject    *object,
   switch (prop_id)
     {
     case PROP_TASK_ROW:
+      g_value_set_object (value, self->priv->row);
       break;
 
     default:
@@ -87,11 +88,23 @@ gtd_arrow_frame_set_property (GObject      *object,
   switch (prop_id)
     {
     case PROP_TASK_ROW:
+      gtd_arrow_frame_set_row (self, g_value_get_object (value));
       break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     }
+}
+
+static void
+gtd_arrow_frame__row_destroyed (GtdTaskRow *row,
+                                gpointer    user_data)
+{
+  GtdArrowFramePrivate *priv;
+
+  g_return_if_fail (GTD_IS_ARROW_FRAME (user_data));
+
+  gtd_arrow_frame_set_row (GTD_ARROW_FRAME (user_data), NULL);
 }
 
 static gint
@@ -373,7 +386,20 @@ gtd_arrow_frame_set_row (GtdArrowFrame *frame,
 {
   g_return_if_fail (GTD_IS_ARROW_FRAME (frame));
 
+  if (frame->priv->row)
+    {
+      g_signal_handlers_disconnect_by_func (frame->priv->row, gtd_arrow_frame__row_destroyed, frame);
+    }
+
   frame->priv->row = row;
 
-  gtk_widget_queue_draw (GTK_WIDGET (frame));
+  if (row)
+    {
+      g_signal_connect (row,
+                        "destroy",
+                        G_CALLBACK (gtd_arrow_frame__row_destroyed),
+                        frame);
+
+      gtk_widget_queue_draw (GTK_WIDGET (frame));
+    }
 }

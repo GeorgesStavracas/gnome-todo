@@ -2,124 +2,150 @@
 <!-- Generated with glade 3.18.1 -->
 <interface>
   <requires lib="gtk+" version="3.16"/>
-  <template class="GtdListView" parent="GtkBox">
+  <template class="GtdListView" parent="GtkOverlay">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="orientation">vertical</property>
     <child>
-      <object class="GtkScrolledWindow" id="scrolled_window">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="hexpand">True</property>
-        <property name="vexpand">True</property>
-        <child>
-          <object class="GtkViewport" id="viewport">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="shadow_type">none</property>
-            <child>
-              <object class="GtkListBox" id="listbox">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="valign">start</property>
-                <property name="hexpand">True</property>
-                <property name="selection_mode">none</property>
-                <style>
-                  <class name="transparent" />
-                </style>
-              </object>
-            </child>
-          </object>
-        </child>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkRevealer" id="revealer">
+      <object class="GtkBox" id="main_box">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="transition_type">slide-up</property>
+        <property name="orientation">vertical</property>
         <child>
-          <object class="GtkBox" id="box">
+          <object class="GtkScrolledWindow" id="scrolled_window">
             <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="orientation">vertical</property>
+            <property name="can_focus">True</property>
+            <property name="hexpand">True</property>
+            <property name="vexpand">True</property>
             <child>
-              <object class="GtkSeparator" id="separator">
+              <object class="GtkViewport" id="viewport">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="hexpand">True</property>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="done_button">
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="tooltip_text" translatable="yes">Show or hide completed tasks</property>
-                <property name="border_width">12</property>
-                <property name="relief">none</property>
-                <signal name="clicked" handler="gtd_list_view__done_button_clicked" object="GtdListView" swapped="no" />
+                <property name="shadow_type">none</property>
                 <child>
-                  <object class="GtkBox" id="done_button_box">
+                  <object class="GtkListBox" id="listbox">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="spacing">12</property>
-                    <child>
-                      <object class="GtkImage" id="done_image">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="icon_name">zoom-in-symbolic</property>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkLabel" id="done_label">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                        <property name="hexpand">True</property>
-                        <property name="label" translatable="yes">Done</property>
-                        <property name="xalign">0</property>
-                        <style>
-                          <class name="dim-label"/>
-                        </style>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">1</property>
-                      </packing>
-                    </child>
+                    <property name="valign">start</property>
+                    <property name="hexpand">True</property>
+                    <property name="selection_mode">none</property>
+                    <signal name="row-activated" handler="gtd_list_view__row_activated" object="GtdListView" swapped="no" />
+                    <style>
+                      <class name="transparent" />
+                    </style>
                   </object>
                 </child>
               </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkRevealer" id="revealer">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="transition_type">slide-up</property>
+            <child>
+              <object class="GtkBox" id="box">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="GtkSeparator" id="separator">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="hexpand">True</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="done_button">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="tooltip_text" translatable="yes">Show or hide completed tasks</property>
+                    <property name="border_width">12</property>
+                    <property name="relief">none</property>
+                    <signal name="clicked" handler="gtd_list_view__done_button_clicked" object="GtdListView" swapped="no" />
+                    <child>
+                      <object class="GtkBox" id="done_button_box">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="spacing">12</property>
+                        <child>
+                          <object class="GtkImage" id="done_image">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="icon_name">zoom-in-symbolic</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="done_label">
+                            <property name="visible">True</property>
+                            <property name="can_focus">False</property>
+                            <property name="hexpand">True</property>
+                            <property name="label" translatable="yes">Done</property>
+                            <property name="xalign">0</property>
+                            <style>
+                              <class name="dim-label"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+    <child type="overlay">
+      <object class="GtkRevealer" id="edit_revealer">
+        <property name="visible">True</property>
+        <property name="halign">end</property>
+        <property name="transition_type">slide-left</property>
+        <property name="transition_duration">150</property>
+        <child>
+          <object class="GtdArrowFrame" id="arrow_frame">
+            <property name="visible">True</property>
+            <child>
+              <object class="GtdEditPane" id="edit_pane">
+                <property name="visible">True</property>
+                <signal name="edit-finished" handler="gtd_list_view__edit_task_finished" object="GtdListView" swapped="no" />
+              </object>
             </child>
           </object>
         </child>
       </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">1</property>
-      </packing>
     </child>
   </template>
 </interface>

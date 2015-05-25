@@ -27,7 +27,7 @@ G_BEGIN_DECLS
 
 #define GTD_TYPE_LIST_VIEW (gtd_list_view_get_type())
 
-G_DECLARE_FINAL_TYPE (GtdListView, gtd_list_view, GTD, LIST_VIEW, GtkBox)
+G_DECLARE_FINAL_TYPE (GtdListView, gtd_list_view, GTD, LIST_VIEW, GtkOverlay)
 
 GtkWidget*                gtd_list_view_new                     (void);
 

@@ -35,6 +35,7 @@ typedef struct
 
   /* task widgets */
   GtkEntry                  *title_entry;
+  GtkLabel                  *task_date_label;
   GtkLabel                  *task_list_label;
   GtkSpinner                *task_loading_spinner;
   GtkLabel                  *title_label;
@@ -70,6 +71,65 @@ enum {
 };
 
 static guint signals[NUM_SIGNALS] = { 0, };
+
+static gboolean
+gtd_task_row__date_changed_binding (GBinding     *binding,
+                                    const GValue *from_value,
+                                    GValue       *to_value,
+                                    gpointer      user_data)
+{
+  GtdTaskRowPrivate *priv;
+  GDateTime *dt;
+  gchar *new_label = NULL;
+
+  g_return_val_if_fail (GTD_IS_TASK_ROW (user_data), FALSE);
+
+  priv = GTD_TASK_ROW (user_data)->priv;
+  dt = g_value_get_boxed (from_value);
+
+  if (dt)
+    {
+      GDateTime *today = g_date_time_new_now_local ();
+      new_label = g_date_time_format (dt, "%x");
+
+      if (g_date_time_get_year (dt) == g_date_time_get_year (today) &&
+          g_date_time_get_month (dt) == g_date_time_get_month (today))
+        {
+          if (g_date_time_get_day_of_month (dt) == g_date_time_get_day_of_month (today))
+            {
+              new_label = g_strdup (_("Today"));
+            }
+          else if (g_date_time_get_day_of_month (dt) == g_date_time_get_day_of_month (today) + 1)
+            {
+              new_label = g_strdup (_("Tomorrow"));
+            }
+          else if (g_date_time_get_day_of_month (dt) == g_date_time_get_day_of_month (today) - 1)
+            {
+              new_label = g_strdup (_("Yesterday"));
+            }
+          else if (g_date_time_get_day_of_year (dt) > g_date_time_get_day_of_month (today) &&
+                   g_date_time_get_day_of_year (dt) < g_date_time_get_day_of_month (today) + 7)
+            {
+              new_label = g_date_time_format (dt, "%A");
+            }
+          else
+            {
+              new_label = g_date_time_format (dt, "%x");
+            }
+        }
+
+    }
+  else
+    {
+      new_label = g_strdup (_("No date set"));
+    }
+
+  g_value_set_string (to_value, new_label);
+
+  g_free (new_label);
+
+  return TRUE;
+}
 
 static GtdTask*
 gtd_task_row__create_task_for_name (const gchar *name)
@@ -119,10 +179,6 @@ gtd_task_row__focus_in (GtkWidget *widget,
     {
       gtk_stack_set_visible_child_name (priv->new_task_stack, "entry");
       gtk_widget_grab_focus (GTK_WIDGET (priv->new_task_entry));
-    }
-  else
-    {
-      g_signal_emit (widget, signals[ENTER], 0);
     }
 
   return FALSE;
@@ -233,10 +289,19 @@ gtd_task_row_set_property (GObject      *object,
 }
 
 static void
+gtd_task_row_activate (GtkListBoxRow *row)
+{
+  GTK_LIST_BOX_ROW_CLASS (gtd_task_row_parent_class)->activate (row);
+
+  g_signal_emit (row, signals[ENTER], 0);
+}
+
+static void
 gtd_task_row_class_init (GtdTaskRowClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
+  GtkListBoxRowClass *row_class = GTK_LIST_BOX_ROW_CLASS (klass);
 
   object_class->finalize = gtd_task_row_finalize;
   object_class->get_property = gtd_task_row_get_property;
@@ -244,6 +309,8 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
 
   widget_class->focus_in_event = gtd_task_row__focus_in;
   widget_class->key_press_event = gtd_task_row__key_press_event;
+
+  row_class->activate = gtd_task_row_activate;
 
   /**
    * GtdTaskRow::new-task-mode:
@@ -341,6 +408,7 @@ gtd_task_row_class_init (GtdTaskRowClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, new_task_entry);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, new_task_stack);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, revealer);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, task_date_label);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, task_list_label);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, task_loading_spinner);
   gtk_widget_class_bind_template_child_private (widget_class, GtdTaskRow, title_entry);
@@ -460,6 +528,16 @@ gtd_task_row_set_task (GtdTaskRow *row,
                                   row->priv->task_loading_spinner,
                                   "visible",
                                   G_BINDING_INVERT_BOOLEAN | G_BINDING_SYNC_CREATE);
+
+          g_object_bind_property_full (task,
+                                       "due-date",
+                                       row->priv->task_date_label,
+                                       "label",
+                                       G_BINDING_DEFAULT | G_BINDING_SYNC_CREATE,
+                                       gtd_task_row__date_changed_binding,
+                                       NULL,
+                                       row,
+                                       NULL);
         }
 
       g_object_notify (G_OBJECT (row), "task");

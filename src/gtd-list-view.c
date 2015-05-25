@@ -16,6 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "gtd-arrow-frame.h"
+#include "gtd-edit-pane.h"
 #include "gtd-list-view.h"
 #include "gtd-manager.h"
 #include "gtd-task.h"
@@ -28,6 +30,9 @@
 
 typedef struct
 {
+  GtdArrowFrame         *arrow_frame;
+  GtdEditPane           *edit_pane;
+  GtkRevealer           *edit_revealer;
   GtkListBox            *listbox;
   GtdTaskRow            *new_task_row;
   GtkRevealer           *revealer;
@@ -51,7 +56,7 @@ typedef struct
 
 struct _GtdListView
 {
-  GtkBox               parent;
+  GtkOverlay          parent;
 
   /*<private>*/
   GtdListViewPrivate *priv;
@@ -64,7 +69,7 @@ static void             gtd_list_view__task_completed                 (GObject  
                                                                        GParamSpec       *spec,
                                                                        gpointer          user_data);
 
-G_DEFINE_TYPE_WITH_PRIVATE (GtdListView, gtd_list_view, GTK_TYPE_BOX)
+G_DEFINE_TYPE_WITH_PRIVATE (GtdListView, gtd_list_view, GTK_TYPE_OVERLAY)
 
 enum {
   PROP_0,
@@ -74,6 +79,26 @@ enum {
   PROP_SHOW_LIST_NAME,
   LAST_PROP
 };
+
+static void
+gtd_list_view__edit_task_finished (GtdEditPane *pane,
+                                   GtdTask     *task,
+                                   gpointer     user_data)
+{
+  GtdListViewPrivate *priv;
+
+  g_return_if_fail (GTD_IS_TASK (task));
+  g_return_if_fail (GTD_IS_EDIT_PANE (pane));
+  g_return_if_fail (GTD_IS_LIST_VIEW (user_data));
+
+  priv = GTD_LIST_VIEW (user_data)->priv;
+
+  gtk_revealer_set_reveal_child (priv->edit_revealer, FALSE);
+
+  gtd_manager_update_task (priv->manager, task);
+
+  gtk_list_box_invalidate_sort (priv->listbox);
+}
 
 static void
 gtd_list_view__color_changed (GObject    *object,
@@ -193,6 +218,7 @@ gtd_list_view__clear_list (GtdListView *view)
   g_return_if_fail (GTD_IS_LIST_VIEW (view));
 
   view->priv->complete_tasks = 0;
+  gtd_arrow_frame_set_row (view->priv->arrow_frame, NULL);
 
   children = gtk_container_get_children (GTK_CONTAINER (view->priv->listbox));
 
@@ -208,8 +234,25 @@ gtd_list_view__clear_list (GtdListView *view)
     }
 
   gtk_revealer_set_reveal_child (view->priv->revealer, FALSE);
+  gtk_revealer_set_reveal_child (view->priv->edit_revealer, FALSE);
 
   g_list_free (children);
+}
+
+static void
+gtd_list_view__row_activated (GtkListBox *listbox,
+                              GtdTaskRow *row,
+                              gpointer    user_data)
+{
+  GtdListViewPrivate *priv = GTD_LIST_VIEW (user_data)->priv;
+
+  if (row == priv->new_task_row)
+    return;
+
+  gtk_revealer_set_reveal_child (priv->edit_revealer, TRUE);
+  gtd_arrow_frame_set_row (priv->arrow_frame, row);
+
+  gtd_edit_pane_set_task (priv->edit_pane, gtd_task_row_get_task (row));
 }
 
 static void
@@ -510,6 +553,9 @@ gtd_list_view_class_init (GtdListViewClass *klass)
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/list-view.ui");
 
+  gtk_widget_class_bind_template_child_private (widget_class, GtdListView, arrow_frame);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdListView, edit_pane);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdListView, edit_revealer);
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, listbox);
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, revealer);
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, done_image);
@@ -517,6 +563,8 @@ gtd_list_view_class_init (GtdListViewClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdListView, viewport);
 
   gtk_widget_class_bind_template_callback (widget_class, gtd_list_view__done_button_clicked);
+  gtk_widget_class_bind_template_callback (widget_class, gtd_list_view__edit_task_finished);
+  gtk_widget_class_bind_template_callback (widget_class, gtd_list_view__row_activated);
 }
 
 static void

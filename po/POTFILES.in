@@ -1,3 +1,21 @@
 # List of source files containing translatable strings.
 
 src/main.c
+data/appdata/org.gnome.Todo.appdata.xml.in
+data/org.gnome.Todo.desktop.in.in
+data/org.gnome.todo.gschema.xml.in
+data/ui/menus.ui
+data/ui/window.ui
+data/ui/edit-pane.ui
+data/ui/list-view.ui
+data/ui/task-row.ui
+src/gtd-application.c
+src/gtd-edit-pane.c
+src/gtd-list-view.c
+src/gtd-manager.c
+src/gtd-object.c
+src/gtd-task-list-item.c
+src/gtd-task-list.c
+src/gtd-task-row.c
+src/gtd-task.c
+src/gtd-window.c

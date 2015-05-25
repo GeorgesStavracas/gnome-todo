@@ -1,0 +1,8 @@
+==============
+Version 3.17.2
+==============
+
+Project:
+        * Initial release
+        * Simple and unfinished task management
+        * Evolution-Data-Server as data backend

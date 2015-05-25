@@ -4,6 +4,7 @@
 /*.rej
 /*.tab.c
 /*~
+/*.*~
 /.*.sw[nop]
 /.deps
 /.dirstamp

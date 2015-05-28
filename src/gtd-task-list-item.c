@@ -259,7 +259,7 @@ gtd_task_list_item__update_thumbnail (GtdTaskListItem *item)
 {
   GtdTaskListItemPrivate *priv = item->priv;
 
-  if (gtd_object_get_ready (GTD_OBJECT (priv->list)))
+  if (!gtd_object_get_ready (GTD_OBJECT (priv->list)))
     {
       gtk_image_set_from_icon_name (GTK_IMAGE (priv->icon_image),
                                     "folder-documents-symbolic",
@@ -374,6 +374,18 @@ gtd_task_list_item_set_property (GObject      *object,
                               priv->subtitle_label,
                               "label",
                               G_BINDING_DEFAULT | G_BINDING_SYNC_CREATE);
+
+      g_object_bind_property (priv->list,
+                              "ready",
+                              priv->spinner,
+                              "visible",
+                              G_BINDING_DEFAULT | G_BINDING_INVERT_BOOLEAN | G_BINDING_SYNC_CREATE);
+
+      g_object_bind_property (priv->list,
+                              "ready",
+                              priv->spinner,
+                              "active",
+                              G_BINDING_DEFAULT | G_BINDING_INVERT_BOOLEAN | G_BINDING_SYNC_CREATE);
 
       g_signal_connect_swapped (priv->list,
                                 "notify::ready",

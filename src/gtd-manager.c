@@ -319,6 +319,8 @@ gtd_manager__fill_task_list (GObject      *client,
                                                 &component_list,
                                                 &error);
 
+  gtd_object_set_ready (GTD_OBJECT (user_data), TRUE);
+
   if (!error)
     {
       GSList *l;

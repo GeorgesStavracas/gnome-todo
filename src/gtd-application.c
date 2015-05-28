@@ -133,7 +133,7 @@ gtd_application_quit (GSimpleAction *simple,
 GtdApplication *
 gtd_application_new (void)
 {
-  g_set_application_name ("To Do");
+  g_set_application_name (_("To Do"));
 
   return g_object_new (GTD_TYPE_APPLICATION,
                        "application-id", "org.gnome.Todo",

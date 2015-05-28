@@ -444,7 +444,7 @@ gtd_list_view_set_property (GObject      *object,
   switch (prop_id)
     {
     case PROP_MANAGER:
-      self->priv->manager = g_value_get_object (value);
+      gtd_list_view_set_manager (self, g_value_get_object (value));
       break;
 
     case PROP_SHOW_COMPLETED:
@@ -656,6 +656,7 @@ gtd_list_view_set_manager (GtdListView *view,
   if (view->priv->manager != manager)
     {
       view->priv->manager = manager;
+      gtd_edit_pane_set_manager (GTD_EDIT_PANE (view->priv->edit_pane), manager);
 
       g_object_notify (G_OBJECT (view), "manager");
     }

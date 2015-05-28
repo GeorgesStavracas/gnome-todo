@@ -2,6 +2,10 @@
     background-color: transparent;
 }
 
+GtdTaskRow {
+    border-bottom: 1px solid alpha(@borders, 0.4);
+}
+
 GtdTaskListItem.thumbnail {
     margin-left: 10px;
     margin-right: 10px;

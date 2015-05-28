@@ -194,22 +194,6 @@ gtd_list_view__listbox_sort_func (GtdTaskRow *row1,
 }
 
 static void
-gtd_list_view__header_func (GtkListBoxRow *row,
-                            GtkListBoxRow *before,
-                            gpointer       user_data)
-{
-  if (before)
-    {
-      GtkWidget *separator;
-
-      separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
-      gtk_widget_show (separator);
-
-      gtk_list_box_row_set_header (row, separator);
-    }
-}
-
-static void
 gtd_list_view__clear_list (GtdListView *view)
 {
   GList *children;
@@ -443,11 +427,6 @@ gtd_list_view_constructed (GObject *object)
                                   GTK_STYLE_PROVIDER_PRIORITY_APPLICATION + 2);
 
   /* show a nifty separator between lines */
-  gtk_list_box_set_header_func (self->priv->listbox,
-                                (GtkListBoxUpdateHeaderFunc) gtd_list_view__header_func,
-                                NULL,
-                                NULL);
-
   gtk_list_box_set_sort_func (self->priv->listbox,
                               (GtkListBoxSortFunc) gtd_list_view__listbox_sort_func,
                               NULL,

@@ -424,7 +424,8 @@ gtd_manager__load__source (GtdManager *manager,
 {
   GtdManagerPrivate *priv = manager->priv;
 
-  if (!g_hash_table_lookup (priv->clients, source))
+  if (e_source_has_extension (source, E_SOURCE_EXTENSION_TASK_LIST) &&
+      !g_hash_table_lookup (priv->clients, source))
     {
       e_cal_client_connect (source,
                             E_CAL_CLIENT_SOURCE_TYPE_TASKS,

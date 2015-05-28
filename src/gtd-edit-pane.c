@@ -290,6 +290,45 @@ gtd_edit_pane_new (void)
 }
 
 /**
+ * gtd_edit_pane_get_manager:
+ *
+ * Retrieves the #GtdManager of the application.
+ *
+ * Returns: (transfer none): the #GtdManager of @pane
+ */
+GtdManager*
+gtd_edit_pane_get_manager (GtdEditPane *pane)
+{
+  g_return_val_if_fail (GTD_IS_EDIT_PANE (pane), NULL);
+
+  return pane->priv->manager;
+}
+
+/**
+ * gtd_edit_pane_set_manager:
+ * @pane: a #GtdEditPane
+ * @manager: the singleton #GtdManager
+ *
+ * Sets the #GtdManager of the application.
+ *
+ * Returns:
+ */
+void
+gtd_edit_pane_set_manager (GtdEditPane *pane,
+                           GtdManager  *manager)
+{
+  g_return_if_fail (GTD_IS_EDIT_PANE (pane));
+  g_return_if_fail (GTD_IS_MANAGER (manager));
+
+  if (pane->priv->manager != manager)
+    {
+      pane->priv->manager = manager;
+
+      g_object_notify (G_OBJECT (pane), "manager");
+    }
+}
+
+/**
  * gtd_edit_pane_get_task:
  * @pane: a #GtdEditPane
  *

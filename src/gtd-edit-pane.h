@@ -32,11 +32,15 @@ G_DECLARE_FINAL_TYPE (GtdEditPane, gtd_edit_pane, GTD, EDIT_PANE, GtkGrid)
 
 GtkWidget*                 gtd_edit_pane_new                 (void);
 
+GtdManager*                gtd_edit_pane_get_manager         (GtdEditPane        *pane);
+
+void                       gtd_edit_pane_set_manager         (GtdEditPane        *pane,
+                                                              GtdManager         *manager);
+
 GtdTask*                   gtd_edit_pane_get_task            (GtdEditPane        *pane);
 
 void                       gtd_edit_pane_set_task            (GtdEditPane        *pane,
                                                               GtdTask            *task);
-
 G_END_DECLS
 
 #endif /* GTD_EDIT_PANE_H */

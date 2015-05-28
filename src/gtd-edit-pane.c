@@ -19,6 +19,7 @@
 #include "gtd-edit-pane.h"
 #include "gtd-manager.h"
 #include "gtd-task.h"
+#include "gtd-task-list.h"
 
 #include <glib/gi18n.h>
 
@@ -367,6 +368,12 @@ gtd_edit_pane_set_task (GtdEditPane *pane,
     {
       if (priv->task)
         {
+          /* Save the old task before exiting */
+          gtd_task_save (priv->task);
+
+          gtd_manager_update_task (priv->manager, priv->task);
+          gtd_task_list_save_task (gtd_task_get_list (priv->task), task);
+
           g_clear_pointer (&priv->notes_binding, g_binding_unbind);
           g_clear_pointer (&priv->priority_binding, g_binding_unbind);
         }

@@ -151,6 +151,8 @@ gtd_edit_pane__date_selected (GtkCalendar *calendar,
   gtd_task_set_due_date (priv->task, new_dt);
   gtk_label_set_label (priv->date_label, text);
 
+  gtd_task_save (priv->task);
+
   g_date_time_unref (new_dt);
   g_free (text);
 }

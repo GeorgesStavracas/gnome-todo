@@ -25,9 +25,9 @@ EXTRA_DIST=                     \
   appdata/org.gnome.Todo.appdata.xml \
   org.gnome.Todo.desktop \
   todo.gresource.xml \
+  gtk/menus.ui \
   ui/edit-pane.ui \
   ui/list-view.ui \
-  ui/menus.ui \
   ui/task-list-item.ui \
   ui/task-row.ui \
   ui/window.ui \

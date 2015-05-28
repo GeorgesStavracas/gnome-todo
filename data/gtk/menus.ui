@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <interface>
-  <menu id="appmenu">
+  <!-- interface-requires gtk+ 3.0 -->
+  <menu id="app-menu">
     <section>
       <item>
         <attribute name="label" translatable="yes">New List…</attribute>

@@ -63,17 +63,6 @@ static const GActionEntry gtd_application_entries[] = {
 };
 
 static void
-gtd_application__manager_notify_ready_cb (GtdManager *manager,
-                                          GParamSpec *pspec,
-                                          gpointer    user_data)
-{
-  if (!gtd_object_get_ready (GTD_OBJECT (manager)))
-    g_application_mark_busy (G_APPLICATION (user_data));
-  else
-    g_application_unmark_busy (G_APPLICATION (user_data));
-}
-
-static void
 gtd_application_show_about (GSimpleAction *simple,
                             GVariant      *parameter,
                             gpointer       user_data)
@@ -176,17 +165,6 @@ gtd_application_activate (GApplication *application)
        }
    }
 
-  /* manager */
-  if (!priv->manager)
-    {
-      priv->manager = gtd_manager_new ();
-
-      g_signal_connect (priv->manager,
-                        "notify::ready",
-                        G_CALLBACK (gtd_application__manager_notify_ready_cb),
-                        application);
-    }
-
   /* window */
   if (priv->window == NULL)
     priv->window = gtd_window_new (GTD_APPLICATION (application));
@@ -208,6 +186,11 @@ gtd_application_finalize (GObject *object)
 static void
 gtd_application_startup (GApplication *application)
 {
+  GtdApplicationPrivate *priv = GTD_APPLICATION (application)->priv;
+
+  /* manager */
+  priv->manager = gtd_manager_new ();
+
   /* app menu */
   g_application_set_resource_base_path (application, "/org/gnome/todo");
 

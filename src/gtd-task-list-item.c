@@ -282,7 +282,8 @@ gtd_task_list_item__task_changed (GtdTaskList *list,
 {
   g_return_if_fail (GTD_IS_TASK_LIST_ITEM (user_data));
 
-  gtd_task_list_item__update_thumbnail (GTD_TASK_LIST_ITEM (user_data));
+  if (!gtd_task_get_complete (task))
+    gtd_task_list_item__update_thumbnail (GTD_TASK_LIST_ITEM (user_data));
 }
 
 static void

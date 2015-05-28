@@ -55,39 +55,26 @@ enum
 };
 
 GDateTime*
-gtd_task__convert_icaltime (const icaltimetype *date,
-                            const gchar        *tz)
+gtd_task__convert_icaltime (const icaltimetype *date)
 {
+  GTimeZone *tz;
   GDateTime *dt;
   gboolean is_date;
 
-  g_return_val_if_fail (date, NULL);
+  if (!date)
+    return NULL;
 
   is_date = date->is_date ? TRUE : FALSE;
 
-  if (tz)
-    {
-      GTimeZone *timezone = g_time_zone_new (tz);
+  tz = g_time_zone_new_utc ();
 
-      dt = g_date_time_new (timezone,
-                            date->year,
-                            date->month,
-                            date->day,
-                            is_date ? date->hour : 0,
-                            is_date ? date->minute : 0,
-                            is_date ? date->second : 0.0);
-
-      g_time_zone_unref (timezone);
-    }
-  else
-    {
-      dt = g_date_time_new_local (date->year,
-                                  date->month,
-                                  date->day,
-                                  is_date ? date->hour : 0,
-                                  is_date ? date->minute : 0,
-                                  is_date ? date->second : 0.0);
-    }
+  dt = g_date_time_new (tz,
+                        date->year,
+                        date->month,
+                        date->day,
+                        is_date ? date->hour : 0,
+                        is_date ? date->minute : 0,
+                        is_date ? date->second : 0.0);
 
   return dt;
 }
@@ -586,12 +573,9 @@ gtd_task_get_due_date (GtdTask *task)
 
   g_return_val_if_fail (GTD_IS_TASK (task), NULL);
 
-  e_cal_component_get_dtend (task->priv->component, &comp_dt);
+  e_cal_component_get_due (task->priv->component, &comp_dt);
 
-  if (comp_dt.value)
-    return gtd_task__convert_icaltime (comp_dt.value, comp_dt.tzid);
-  else
-    return NULL;
+  return gtd_task__convert_icaltime (comp_dt.value);
 }
 
 /**
@@ -642,7 +626,7 @@ gtd_task_set_due_date (GtdTask   *task,
                           idt->minute == 0 &&
                           idt->second == 0);
 
-          comp_dt.tzid = g_strdup (g_date_time_get_timezone_abbreviation (dt));
+          comp_dt.tzid = g_strdup ("UTC");
 
           g_date_time_unref (dt);
 
@@ -658,7 +642,7 @@ gtd_task_set_due_date (GtdTask   *task,
 
       comp_dt.value = idt;
 
-      e_cal_component_set_dtend (task->priv->component, &comp_dt);
+      e_cal_component_set_due (task->priv->component, &comp_dt);
 
       e_cal_component_free_datetime (&comp_dt);
 

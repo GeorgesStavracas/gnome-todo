@@ -326,6 +326,7 @@ gtd_list_view__task_completed (GObject    *object,
   task_complete = gtd_task_get_complete (task);
 
   gtd_manager_update_task (priv->manager, task);
+  gtd_task_list_save_task (gtd_task_get_list (task), task);
 
   if (task_complete)
     priv->complete_tasks++;

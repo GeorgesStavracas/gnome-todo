@@ -911,7 +911,7 @@ gtd_task_compare (GtdTask *t1,
   else if (!dt2)
     retval = -1;
   else
-    retval = -1 * g_date_time_compare (t1, t2);
+    retval = -1 * g_date_time_compare (dt1, dt2);
 
   if (dt1)
     g_date_time_unref (dt1);

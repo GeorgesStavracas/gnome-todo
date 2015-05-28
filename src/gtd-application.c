@@ -145,10 +145,6 @@ static void
 gtd_application_activate (GApplication *application)
 {
   GtdApplicationPrivate *priv = GTD_APPLICATION (application)->priv;
-  GtkBuilder *builder;
-  GMenuModel *appmenu;
-
-  builder = gtk_builder_new_from_resource ("/org/gnome/todo/ui/menus.ui");
 
   if (!priv->provider)
    {
@@ -196,18 +192,6 @@ gtd_application_activate (GApplication *application)
     priv->window = gtd_window_new (GTD_APPLICATION (application));
 
   gtk_widget_show (priv->window);
-
-  /* app menu */
-  appmenu = (GMenuModel*) gtk_builder_get_object (builder, "appmenu");
-
-  g_action_map_add_action_entries (G_ACTION_MAP (application),
-                                   gtd_application_entries,
-                                   G_N_ELEMENTS (gtd_application_entries),
-                                   application);
-
-  gtk_application_set_app_menu (GTK_APPLICATION (application), appmenu);
-
-  g_object_unref (builder);
 }
 
 static void
@@ -222,6 +206,21 @@ gtd_application_finalize (GObject *object)
 }
 
 static void
+gtd_application_startup (GApplication *application)
+{
+  /* app menu */
+  g_application_set_resource_base_path (application, "/org/gnome/todo");
+
+  /* add actions */
+  g_action_map_add_action_entries (G_ACTION_MAP (application),
+                                   gtd_application_entries,
+                                   G_N_ELEMENTS (gtd_application_entries),
+                                   application);
+
+  G_APPLICATION_CLASS (gtd_application_parent_class)->startup (application);
+}
+
+static void
 gtd_application_class_init (GtdApplicationClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -230,6 +229,7 @@ gtd_application_class_init (GtdApplicationClass *klass)
   object_class->finalize = gtd_application_finalize;
 
   application_class->activate = gtd_application_activate;
+  application_class->startup = gtd_application_startup;
 }
 
 static void

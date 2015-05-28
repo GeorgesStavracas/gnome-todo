@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "gtd-task.h"
 #include "gtd-task-list.h"
 #include "gtd-task-list-item.h"
 
@@ -45,7 +46,9 @@ struct _GtdTaskListItem
 
 G_DEFINE_TYPE_WITH_PRIVATE (GtdTaskListItem, gtd_task_list_item, GTK_TYPE_FLOW_BOX_CHILD)
 
-#define THUMBNAIL_SIZE            176
+#define LUMINANCE(c)              (0.299 * c->red + 0.587 * c->green + 0.114 * c->blue)
+
+#define THUMBNAIL_SIZE            192
 
 enum {
   PROP_0,
@@ -57,50 +60,202 @@ enum {
 GdkPixbuf*
 gtd_task_list_item__render_thumbnail (GtdTaskListItem *item)
 {
+  PangoFontDescription *font_desc;
   GtkStyleContext *context;
   cairo_surface_t *surface;
+  GtkStateFlags state;
+  PangoLayout *layout;
+  GtdTaskList *list;
+  GdkPixbuf *pix = NULL;
+  GdkPixbuf *thumbnail;
+  GtkBorder margin;
+  GtkBorder padding;
+  GdkRGBA *color;
   cairo_t *cr;
-  GdkPixbuf *pix;
+  GError *error = NULL;
+  GList *tasks;
 
   /* TODO: review size here, maybe not hardcoded */
+  list = item->priv->list;
   surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
                                         THUMBNAIL_SIZE,
                                         THUMBNAIL_SIZE);
   cr = cairo_create (surface);
 
   /*
-   * Custom themes may apply custom styles here. Use the
-   * gtk_render_background to allow this.
+   * We'll draw the task names according to the font size, margin & padding
+   * specified by the .thumbnail class. With that, it can be adapted to any
+   * other themes.
    */
   context = gtk_widget_get_style_context (GTK_WIDGET (item));
+  state = gtk_widget_get_state_flags (GTK_WIDGET (item));
 
+  gtk_style_context_save (context);
   gtk_style_context_add_class (context, "thumbnail");
 
-  gtk_render_background (context,
+  /* Draw the thumbnail image */
+  thumbnail = gdk_pixbuf_new_from_resource ("/org/gnome/todo/theme/bg.svg", &error);
+
+  if (error)
+    {
+      g_warning ("Error loading thumbnail: %s", error->message);
+      g_error_free (error);
+      goto out;
+    }
+
+  gtk_render_icon (context,
+                   cr,
+                   thumbnail,
+                   0.0,
+                   0.0);
+
+  /* Draw the list's background color */
+  color = gtd_task_list_get_color (list);
+
+  gdk_cairo_set_source_rgba (cr, color);
+
+  cairo_rectangle (cr,
+                   33.0,
+                   9.0,
+                   126.0,
+                   174.0);
+
+  cairo_fill (cr);
+
+  /* Draw the first tasks from the list */
+  gtk_style_context_get (context,
+                         state,
+                         "font", &font_desc,
+                         NULL);
+  gtk_style_context_get_margin (context,
+                                state,
+                                &margin);
+  gtk_style_context_get_padding (context,
+                                 state,
+                                 &padding);
+
+  layout = pango_cairo_create_layout (cr);
+  tasks = gtd_task_list_get_tasks (list);
+
+  /*
+   * Sort the list, so that the first tasks are similar to what
+   * the user will see when selecting the list.
+   */
+  tasks = g_list_sort (tasks, (GCompareFunc) gtd_task_compare);
+
+  pango_layout_set_font_description (layout, font_desc);
+  pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
+  pango_layout_set_width (layout, (126 - margin.left - margin.right) * PANGO_SCALE);
+
+  /*
+   * If the list exists and it's first element is a completed task,
+   * we know for sure (since the list is already sorted) that there's
+   * no undone tasks here.
+   */
+  if (!tasks ||
+      (tasks && !gtd_task_get_complete (tasks->data)))
+    {
+      /* Draw the task name for each selected row. */
+      gdouble x, y;
+      GList *l;
+
+      x = 33.0 + margin.left;
+      y = 9.0 + margin.top;
+
+      for (l = tasks; l != NULL; l = l->next)
+        {
+          gint font_height;
+
+          /* Don't render completed tasks */
+          if (gtd_task_get_complete (l->data))
+            continue;
+
+          y += padding.top;
+
+          pango_layout_set_text (layout,
+                                 gtd_task_get_title (l->data),
+                                 -1);
+
+          pango_layout_get_pixel_size (layout,
+                                       NULL,
+                                       &font_height);
+
+          /*
+           * If we reach the last visible row, it should draw a
+           * "…" mark and stop drawing anything else
+           */
+          if (y + (padding.top + font_height + padding.bottom) + margin.bottom > 174)
+            {
+              pango_layout_set_text (layout,
+                                     "…",
+                                     -1);
+
+              gtk_render_layout (context,
+                             cr,
+                             x,
+                             y,
+                             layout);
+              break;
+            }
+
+          gtk_render_layout (context,
+                             cr,
+                             x,
+                             y,
+                             layout);
+
+          y += font_height + padding.bottom;
+        }
+
+      g_list_free (tasks);
+    }
+  else
+    {
+      /*
+       * If there's no task available, draw a "No tasks" string at
+       * the middle of the list thumbnail.
+       */
+      gdouble y;
+      gint font_height;
+
+      pango_layout_set_text (layout,
+                             _("No tasks"),
+                             -1);
+      pango_layout_set_alignment (layout, PANGO_ALIGN_CENTER);
+      pango_layout_get_pixel_size (layout,
+                                   NULL,
+                                   &font_height);
+
+      y = (192 - font_height) / 2.0;
+
+      gtk_render_layout (context,
                          cr,
-                         0.0,
-                         0.0,
-                         THUMBNAIL_SIZE,
-                         THUMBNAIL_SIZE);
+                         33.0 + margin.left,
+                         y,
+                         layout);
+    }
 
-  gtk_style_context_remove_class (context, "thumbnail");
+  pango_font_description_free (font_desc);
+  g_object_unref (layout);
 
-  /* Retrieve the pixbuf */
+  /* Retrieves the pixbuf from the drawed image */
   pix = gdk_pixbuf_get_from_surface (surface,
                                      0,
                                      0,
                                      THUMBNAIL_SIZE,
                                      THUMBNAIL_SIZE);
 
+  gdk_rgba_free (color);
+
+out:
+  gtk_style_context_restore (context);
   cairo_surface_destroy (surface);
   cairo_destroy (cr);
   return pix;
 }
 
 static void
-gtd_task_list_item__notify_ready (GtdTaskListItem *item,
-                                  GParamSpec      *pspec,
-                                  gpointer         user_data)
+gtd_task_list_item__update_thumbnail (GtdTaskListItem *item)
 {
   GtdTaskListItemPrivate *priv = item->priv;
 
@@ -120,12 +275,40 @@ gtd_task_list_item__notify_ready (GtdTaskListItem *item,
     }
 }
 
+static void
+gtd_task_list_item__task_changed (GtdTaskList *list,
+                                  GtdTask     *task,
+                                  gpointer     user_data)
+{
+  g_return_if_fail (GTD_IS_TASK_LIST_ITEM (user_data));
+
+  gtd_task_list_item__update_thumbnail (GTD_TASK_LIST_ITEM (user_data));
+}
+
+static void
+gtd_task_list_item__notify_ready (GtdTaskListItem *item,
+                                  GParamSpec      *pspec,
+                                  gpointer         user_data)
+{
+  gtd_task_list_item__update_thumbnail (item);
+}
+
 GtkWidget*
 gtd_task_list_item_new (GtdTaskList *list)
 {
   return g_object_new (GTD_TYPE_TASK_LIST_ITEM,
                        "task-list", list,
                        NULL);
+}
+
+static void
+gtd_task_list_item_state_flags_changed (GtkWidget     *item,
+                                         GtkStateFlags  flags)
+{
+  if (GTK_WIDGET_CLASS (gtd_task_list_item_parent_class)->state_flags_changed)
+    GTK_WIDGET_CLASS (gtd_task_list_item_parent_class)->state_flags_changed (item, flags);
+
+  gtd_task_list_item__update_thumbnail (GTD_TASK_LIST_ITEM (item));
 }
 
 static void
@@ -195,6 +378,18 @@ gtd_task_list_item_set_property (GObject      *object,
                                 "notify::ready",
                                 G_CALLBACK (gtd_task_list_item__notify_ready),
                                 self);
+      g_signal_connect (priv->list,
+                       "task-added",
+                        G_CALLBACK (gtd_task_list_item__task_changed),
+                        self);
+      g_signal_connect (priv->list,
+                       "task-removed",
+                        G_CALLBACK (gtd_task_list_item__task_changed),
+                        self);
+      g_signal_connect (priv->list,
+                       "task-updated",
+                        G_CALLBACK (gtd_task_list_item__task_changed),
+                        self);
 
       g_object_bind_property (priv->spinner,
                               "visible",
@@ -217,6 +412,8 @@ gtd_task_list_item_class_init (GtdTaskListItemClass *klass)
   object_class->finalize = gtd_task_list_item_finalize;
   object_class->get_property = gtd_task_list_item_get_property;
   object_class->set_property = gtd_task_list_item_set_property;
+
+  widget_class->state_flags_changed = gtd_task_list_item_state_flags_changed;
 
   /**
    * GtdTaskListItem::mode:

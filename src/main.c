@@ -36,6 +36,7 @@ main (int argc,
 #endif
 
   app = gtd_application_new ();
+  g_application_set_default (G_APPLICATION (app));
 
   status = g_application_run (G_APPLICATION (app), argc, argv);
 

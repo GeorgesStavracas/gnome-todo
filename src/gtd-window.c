@@ -113,7 +113,7 @@ gtd_window__notification_close_button_clicked (GtkButton *button,
   g_return_if_fail (GTD_IS_WINDOW (user_data));
 
   priv = GTD_WINDOW (user_data)->priv;
-  data = g_queue_pop_head (priv->notification_queue);
+  data = g_queue_peek_head (priv->notification_queue);
 
   /* Cancel any previouly set timeouts */
   if (priv->notification_delay_id > 0)
@@ -123,7 +123,6 @@ gtd_window__notification_close_button_clicked (GtkButton *button,
     }
 
   gtd_window__execute_notification_data (data);
-  gtd_window_consume_notification (GTD_WINDOW (user_data));
 }
 
 static void
@@ -174,6 +173,12 @@ gtd_window__execute_notification_data (NotificationData *data)
 
   if (data->primary_action)
     retval = data->primary_action (data->data);
+
+  /* Remove the current notification from queue */
+  g_queue_pop_head (priv->notification_queue);
+
+  /* Continue consuming notifications */
+  gtd_window_consume_notification (data->window);
 
   notification_data_free (data);
 

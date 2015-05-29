@@ -131,6 +131,9 @@ gtd_list_view__remove_task_cb (GtdEditPane *pane,
   data->view = user_data;
   data->task = task;
 
+  /* Remove the task from the list */
+  gtd_task_list_remove_task (gtd_task_get_list (task), task);
+
   gtd_window_notify (window,
                      7500, //ms
                      TASK_REMOVED_NOTIFICATION_ID,
@@ -885,6 +888,10 @@ gtd_list_view_set_task_list (GtdListView *view,
                         "task-added",
                         G_CALLBACK (gtd_list_view__task_added),
                         view);
+      g_signal_connect_swapped (list,
+                                "task-removed",
+                                G_CALLBACK (gtd_list_view__remove_task),
+                                view);
       g_signal_connect (list,
                         "notify::color",
                         G_CALLBACK (gtd_list_view__color_changed),

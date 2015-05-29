@@ -141,6 +141,7 @@
               <object class="GtdEditPane" id="edit_pane">
                 <property name="visible">True</property>
                 <signal name="edit-finished" handler="gtd_list_view__edit_task_finished" object="GtdListView" swapped="no" />
+                <signal name="remove-task" handler="gtd_list_view__remove_task_cb" object="GtdListView" swapped="no" />
               </object>
             </child>
           </object>

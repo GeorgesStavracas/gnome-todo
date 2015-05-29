@@ -23,6 +23,7 @@
 #include "gtd-task.h"
 #include "gtd-task-list.h"
 #include "gtd-task-row.h"
+#include "gtd-window.h"
 
 #include <glib.h>
 #include <glib/gi18n.h>
@@ -64,12 +65,20 @@ struct _GtdListView
 
 #define COLOR_TEMPLATE "GtkViewport {background-color: %s;}"
 
+#define TASK_REMOVED_NOTIFICATION_ID             "task-removed-id"
+
 /* prototypes */
 static void             gtd_list_view__task_completed                 (GObject          *object,
                                                                        GParamSpec       *spec,
                                                                        gpointer          user_data);
 
 G_DEFINE_TYPE_WITH_PRIVATE (GtdListView, gtd_list_view, GTK_TYPE_OVERLAY)
+
+typedef struct
+{
+  GtdListView *view;
+  GtdTask     *task;
+} RemoveTaskData;
 
 enum {
   PROP_0,
@@ -79,6 +88,61 @@ enum {
   PROP_SHOW_LIST_NAME,
   LAST_PROP
 };
+
+static gboolean
+remove_task_action (RemoveTaskData *data)
+{
+  gtd_manager_remove_task (data->view->priv->manager, data->task);
+
+  g_free (data);
+
+  return G_SOURCE_REMOVE;
+}
+
+static gboolean
+undo_remove_task_action (RemoveTaskData *data)
+{
+  GtdTaskList *list = gtd_task_get_list (data->task);
+
+  gtd_task_list_save_task (list, data->task);
+
+  g_free (data);
+
+  return G_SOURCE_REMOVE;
+}
+
+static void
+gtd_list_view__remove_task_cb (GtdEditPane *pane,
+                               GtdTask     *task,
+                               gpointer     user_data)
+{
+  GtdListViewPrivate *priv;
+  RemoveTaskData *data;
+  GtdWindow *window;
+  gchar *text;
+
+  g_return_if_fail (GTD_IS_LIST_VIEW (user_data));
+
+  priv = GTD_LIST_VIEW (user_data)->priv;
+  text = g_strdup_printf (_("Task <b>%s</b> removed"), gtd_task_get_title (task));
+  window = GTD_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (user_data)));
+
+  data = g_new0 (RemoveTaskData, 1);
+  data->view = user_data;
+  data->task = task;
+
+  gtd_window_notify (window,
+                     7500, //ms
+                     TASK_REMOVED_NOTIFICATION_ID,
+                     text,
+                     _("Undo"),
+                     (GSourceFunc) remove_task_action,
+                     (GSourceFunc) undo_remove_task_action,
+                     FALSE,
+                     data);
+
+  g_free (text);
+}
 
 static void
 gtd_list_view__edit_task_finished (GtdEditPane *pane,
@@ -547,6 +611,7 @@ gtd_list_view_class_init (GtdListViewClass *klass)
 
   gtk_widget_class_bind_template_callback (widget_class, gtd_list_view__done_button_clicked);
   gtk_widget_class_bind_template_callback (widget_class, gtd_list_view__edit_task_finished);
+  gtk_widget_class_bind_template_callback (widget_class, gtd_list_view__remove_task_cb);
   gtk_widget_class_bind_template_callback (widget_class, gtd_list_view__row_activated);
 }
 

@@ -746,8 +746,8 @@ gtd_manager_remove_task (GtdManager *manager,
   gtd_object_set_ready (GTD_OBJECT (task), FALSE);
 
   e_cal_client_remove_object (client,
-                              id->rid,
                               id->uid,
+                              id->rid,
                               E_CAL_OBJ_MOD_THIS,
                               NULL, // We won't cancel the operation
                               (GAsyncReadyCallback) gtd_manager__remove_task_finished,

@@ -168,7 +168,7 @@ gtd_window__execute_notification_data (NotificationData *data)
   gboolean retval = G_SOURCE_REMOVE;
 
   if (data->primary_action)
-    retval = data->primary_action (data);
+    retval = data->primary_action (data->data);
 
   notification_data_free (data);
 

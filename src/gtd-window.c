@@ -115,9 +115,14 @@ gtd_window__notification_close_button_clicked (GtkButton *button,
   priv = GTD_WINDOW (user_data)->priv;
   data = g_queue_pop_head (priv->notification_queue);
 
-  if (data->primary_action)
-    data->primary_action (data->data);
+  /* Cancel any previouly set timeouts */
+  if (priv->notification_delay_id > 0)
+    {
+      g_source_remove (priv->notification_delay_id);
+      priv->notification_delay_id = 0;
+    }
 
+  gtd_window__execute_notification_data (data);
   gtd_window_consume_notification (GTD_WINDOW (user_data));
 }
 

@@ -81,6 +81,9 @@ typedef struct
 
 static gboolean      gtd_window__execute_notification_data       (NotificationData      *data);
 
+
+static void          gtd_window_consume_notification             (GtdWindow             *window);
+
 void                 notification_data_free                      (NotificationData      *data);
 
 G_DEFINE_TYPE_WITH_PRIVATE (GtdWindow, gtd_window, GTK_TYPE_APPLICATION_WINDOW)
@@ -98,6 +101,24 @@ notification_data_free (NotificationData *data)
   g_free (data->text);
   g_free (data->label);
   g_free (data);
+}
+
+static void
+gtd_window__notification_close_button_clicked (GtkButton *button,
+                                               gpointer   user_data)
+{
+  GtdWindowPrivate *priv;
+  NotificationData *data;
+
+  g_return_if_fail (GTD_IS_WINDOW (user_data));
+
+  priv = GTD_WINDOW (user_data)->priv;
+  data = g_queue_pop_head (priv->notification_queue);
+
+  if (data->primary_action)
+    data->primary_action (data->data);
+
+  gtd_window_consume_notification (GTD_WINDOW (user_data));
 }
 
 static void
@@ -414,6 +435,7 @@ gtd_window_class_init (GtdWindowClass *klass)
   gtk_widget_class_bind_template_callback (widget_class, gtd_window__back_button_clicked);
   gtk_widget_class_bind_template_callback (widget_class, gtd_window__list_color_set);
   gtk_widget_class_bind_template_callback (widget_class, gtd_window__list_selected);
+  gtk_widget_class_bind_template_callback (widget_class, gtd_window__notification_close_button_clicked);
 }
 
 static void

@@ -233,6 +233,7 @@
                         <property name="receives_default">True</property>
                         <property name="valign">end</property>
                         <property name="vexpand">True</property>
+                        <signal name="clicked" handler="gtd_edit_pane__delete_button_clicked" object="GtdEditPane" swapped="no" />
                         <style>
                           <class name="destructive-action"/>
                         </style>

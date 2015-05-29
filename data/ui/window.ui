@@ -78,93 +78,93 @@
     <property name="default_width">800</property>
     <property name="default_height">600</property>
     <child>
-      <object class="GtkStack" id="main_stack">
+      <object class="GtkOverlay" id="overlay">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="transition_type">crossfade</property>
-        <child>
-          <object class="GtkOverlay" id="overlay">
+        <child type="overlay">
+          <object class="GtkRevealer" id="notification_revealer">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <child type="overlay">
-              <object class="GtkRevealer" id="notification_revealer">
+            <property name="transition_type">slide-down</property>
+            <property name="halign">center</property>
+            <property name="valign">start</property>
+            <child>
+              <object class="GtkFrame" id="notification_frame">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="transition_type">slide-down</property>
-                <property name="halign">center</property>
-                <property name="valign">start</property>
                 <child>
-                  <object class="GtkFrame" id="notification_frame">
+                  <object class="GtkBox" id="notification_box">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
+                    <property name="spacing">12</property>
                     <child>
-                      <object class="GtkBox" id="notification_box">
+                      <object class="GtkSpinner" id="notification_spinner">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="spacing">12</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="notification_label">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="notification_action_button">
+                        <property name="visible">False</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">Undo</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="notification_close_button">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="relief">none</property>
+                        <signal name="clicked" handler="gtd_window__notification_close_button_clicked" object="GtdWindow" swapped="no" />
                         <child>
-                          <object class="GtkSpinner" id="notification_spinner">
+                          <object class="GtkImage" id="notification_close_button_icon">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
+                            <property name="icon_name">window-close-symbolic</property>
                           </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel" id="notification_label">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkButton" id="notification_action_button">
-                            <property name="visible">False</property>
-                            <property name="can_focus">False</property>
-                            <property name="label" translatable="yes">Undo</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkButton" id="notification_close_button">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="relief">none</property>
-                            <signal name="clicked" handler="gtd_window__notification_close_button_clicked" object="GtdWindow" swapped="no" />
-                            <child>
-                              <object class="GtkImage" id="notification_close_button_icon">
-                                <property name="visible">True</property>
-                                <property name="can_focus">False</property>
-                                <property name="icon_name">window-close-symbolic</property>
-                              </object>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">3</property>
-                          </packing>
                         </child>
                       </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">3</property>
+                      </packing>
                     </child>
-                    <style>
-                      <class name="app-notification" />
-                    </style>
                   </object>
                 </child>
+                <style>
+                  <class name="app-notification" />
+                </style>
               </object>
             </child>
+          </object>
+        </child>
+        <child>
+          <object class="GtkStack" id="main_stack">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="transition_type">crossfade</property>
             <child>
               <object class="GtkBox" id="main_box">
                 <property name="visible">True</property>
@@ -298,22 +298,22 @@
                   </packing>
                 </child>
               </object>
+              <packing>
+                <property name="name">overview</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtdListView" id="list_view">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="readonly">False</property>
+              </object>
+              <packing>
+                <property name="name">tasks</property>
+                <property name="position">1</property>
+              </packing>
             </child>
           </object>
-          <packing>
-            <property name="name">overview</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtdListView" id="list_view">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="readonly">False</property>
-          </object>
-          <packing>
-            <property name="name">tasks</property>
-            <property name="position">1</property>
-          </packing>
         </child>
       </object>
     </child>

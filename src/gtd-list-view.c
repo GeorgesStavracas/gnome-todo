@@ -95,7 +95,10 @@ gtd_list_view__edit_task_finished (GtdEditPane *pane,
 
   gtk_revealer_set_reveal_child (priv->edit_revealer, FALSE);
 
+  gtd_task_save (task);
+
   gtd_manager_update_task (priv->manager, task);
+  gtd_task_list_save_task (priv->task_list, task);
 
   gtk_list_box_invalidate_sort (priv->listbox);
 }

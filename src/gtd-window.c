@@ -32,7 +32,7 @@ typedef struct
   GtkHeaderBar                  *headerbar;
   GtkFlowBox                    *lists_flowbox;
   GtkStack                      *main_stack;
-  GtkRevealer                   *notification_action_button;
+  GtkButton                     *notification_action_button;
   GtkLabel                      *notification_label;
   GtkRevealer                   *notification_revealer;
   GtkSpinner                    *notification_spinner;
@@ -41,6 +41,13 @@ typedef struct
 
   /* mode */
   GtdWindowMode                  mode;
+
+  /*
+   * A queue of the next operations.
+   */
+  GQueue                        *notification_queue;
+  gint                           notification_delay_id;
+  gboolean                       consuming_notifications;
 
   GtdManager                    *manager;
 } GtdWindowPrivate;
@@ -53,6 +60,29 @@ struct _GtdWindow
   GtdWindowPrivate     *priv;
 };
 
+typedef struct
+{
+  GtdWindow   *window;
+
+  gchar       *id;
+  gchar       *text;
+  gchar       *label;
+
+  gint         delay;
+  gboolean     show_spinner;
+
+  GSourceFunc  primary_action;
+  GSourceFunc  secondary_action;
+
+  gpointer     data;
+} NotificationData;
+
+#define LOADING_LISTS_NOTIFICATION_ID            "loading-lists-id"
+
+static gboolean      gtd_window__execute_notification_data       (NotificationData      *data);
+
+void                 notification_data_free                      (NotificationData      *data);
+
 G_DEFINE_TYPE_WITH_PRIVATE (GtdWindow, gtd_window, GTK_TYPE_APPLICATION_WINDOW)
 
 enum {
@@ -60,6 +90,71 @@ enum {
   PROP_MANAGER,
   LAST_PROP
 };
+
+void
+notification_data_free (NotificationData *data)
+{
+  g_free (data->id);
+  g_free (data->text);
+  g_free (data->label);
+  g_free (data);
+}
+
+static void
+gtd_window_consume_notification (GtdWindow *window)
+{
+  GtdWindowPrivate *priv;
+  NotificationData *data;
+
+  g_return_if_fail (GTD_IS_WINDOW (window));
+
+  priv = window->priv;
+
+  if (g_queue_is_empty (priv->notification_queue))
+    {
+      gtk_revealer_set_reveal_child (priv->notification_revealer, FALSE);
+      priv->consuming_notifications = FALSE;
+      return;
+    }
+
+  priv->consuming_notifications = TRUE;
+
+  /* Keep the current operation until it is finished or canceled */
+  data = g_queue_peek_head (priv->notification_queue);
+
+  gtk_button_set_label (priv->notification_action_button, data->label ? data->label : "");
+  gtk_label_set_markup (priv->notification_label, data->text);
+  gtk_revealer_set_reveal_child (priv->notification_revealer, TRUE);
+  gtk_widget_set_visible (GTK_WIDGET (priv->notification_action_button), data->label != NULL);
+
+  /* spinner */
+  gtk_widget_set_visible (GTK_WIDGET (priv->notification_spinner), data->show_spinner);
+  g_object_set (priv->notification_spinner, "active", data->show_spinner, NULL);
+
+  /* If there's a delay set, execute the action */
+  if (data->delay)
+    {
+      priv->notification_delay_id = g_timeout_add (data->delay,
+                                                   (GSourceFunc) gtd_window__execute_notification_data,
+                                                   data);
+    }
+}
+
+static gboolean
+gtd_window__execute_notification_data (NotificationData *data)
+{
+  GtdWindowPrivate *priv = data->window->priv;
+  gboolean retval = G_SOURCE_REMOVE;
+
+  if (data->primary_action)
+    retval = data->primary_action (data);
+
+  notification_data_free (data);
+
+  priv->notification_delay_id = 0;
+
+  return retval;
+}
 
 static void
 gtd_window__list_color_set (GtkColorChooser *button,
@@ -111,21 +206,23 @@ gtd_window__manager_ready_changed (GObject    *source,
                                    gpointer    user_data)
 {
   GtdWindowPrivate *priv = GTD_WINDOW (user_data)->priv;
-
   g_return_if_fail (GTD_IS_WINDOW (user_data));
 
   if (gtd_object_get_ready (GTD_OBJECT (source)))
     {
-      gtk_spinner_stop (priv->notification_spinner);
-      gtk_revealer_set_reveal_child (priv->notification_revealer, FALSE);
+      gtd_window_cancel_notification (GTD_WINDOW (user_data), LOADING_LISTS_NOTIFICATION_ID);
     }
   else
     {
-      gtk_spinner_start (priv->notification_spinner);
-      gtk_label_set_label (priv->notification_label, _("Loading your task lists…"));
-      gtk_widget_show (GTK_WIDGET (priv->notification_spinner));
-      gtk_widget_hide (GTK_WIDGET (priv->notification_action_button));
-      gtk_revealer_set_reveal_child (priv->notification_revealer, TRUE);
+      gtd_window_notify (GTD_WINDOW (user_data),
+                         0,
+                         LOADING_LISTS_NOTIFICATION_ID,
+                         _("Loading your task lists…"),
+                         NULL,
+                         NULL,
+                         NULL,
+                         TRUE,
+                         NULL);
     }
 }
 
@@ -324,6 +421,8 @@ gtd_window_init (GtdWindow *self)
 {
   self->priv = gtd_window_get_instance_private (self);
 
+  self->priv->notification_queue = g_queue_new ();
+
   gtk_widget_init_template (GTK_WIDGET (self));
 }
 
@@ -341,4 +440,115 @@ gtd_window_get_manager (GtdWindow *window)
   g_return_val_if_fail (GTD_IS_WINDOW (window), NULL);
 
   return window->priv->manager;
+}
+
+/**
+ * gtd_window_notify:
+ * @window: a #GtdWindow
+ * @visible_time: time which the notification will be visible, 0 to show permanently
+ * @text: text of the notification
+ * @button_label: text to show on the notification button, %NULL to hide it
+ * @primary_action: function to call when close button is clicked
+ * @secondary_action: function to call when the alternative button is clicked
+ * @show_spinner: whether show the spinner or not
+ * @user_data: custom data
+ *
+ * Shows a notification on the top of the main window.
+ *
+ * Returns:
+ */
+void
+gtd_window_notify (GtdWindow   *window,
+                   gint         visible_time,
+                   const gchar *id,
+                   const gchar *text,
+                   const gchar *button_label,
+                   GSourceFunc  primary_action,
+                   GSourceFunc  secondary_action,
+                   gboolean     show_spinner,
+                   gpointer     user_data)
+{
+  GtdWindowPrivate *priv;
+  NotificationData *data;
+
+  g_return_if_fail (GTD_IS_WINDOW (window));
+
+  priv = window->priv;
+
+  data = g_new0 (NotificationData, 1);
+  data->window = window;
+  data->delay = visible_time;
+  data->id = g_strdup (id);
+  data->text = g_strdup (text);
+  data->label = g_strdup (button_label);
+  data->primary_action = primary_action;
+  data->secondary_action = secondary_action;
+  data->show_spinner = show_spinner;
+  data->data = user_data;
+
+  g_queue_push_tail (priv->notification_queue, data);
+
+  /* If we're not consuming notifications, start it now */
+  if (!priv->consuming_notifications)
+    gtd_window_consume_notification (window);
+}
+
+/**
+ * gtd_window_cancel_notification:
+ * @window: a #GtdManager
+ * @id: id of the given notification
+ *
+ * Cancels the notification with @id as id.
+ *
+ * Returns:
+ */
+void
+gtd_window_cancel_notification (GtdWindow   *window,
+                                const gchar *id)
+{
+  GtdWindowPrivate *priv;
+  NotificationData *data;
+  GList *head;
+  GList *l;
+  gint index;
+
+  g_return_if_fail (GTD_IS_WINDOW (window));
+  g_return_if_fail (id != NULL);
+
+  data = NULL;
+  priv = window->priv;
+  index = 0;
+
+  /* Search for a notification with the given id */
+  head = priv->notification_queue->head;
+
+  for (l = head; l != NULL; l = l->next)
+    {
+      NotificationData *tmp = l->data;
+
+      if (tmp && g_strcmp0 (tmp->id, id) == 0)
+        {
+          data = l->data;
+          break;
+        }
+
+      index++;
+    }
+
+  g_queue_remove (priv->notification_queue, data);
+
+  /* If we're removing the current head, continue consuming the queue */
+  if (index == 0)
+    {
+      /* Remove any remaining timeouts */
+      if (priv->notification_delay_id > 0)
+        {
+          g_source_remove (priv->notification_delay_id);
+          priv->notification_delay_id = 0;
+        }
+
+      gtd_window_consume_notification (window);
+    }
+
+  notification_data_free (data);
 }

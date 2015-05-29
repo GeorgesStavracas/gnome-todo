@@ -34,6 +34,19 @@ GtkWidget*                gtd_window_new                  (GtdApplication       
 
 GtdManager*               gtd_window_get_manager          (GtdWindow            *window);
 
+void                      gtd_window_notify               (GtdWindow            *window,
+                                                           gint                  visible_time,
+                                                           const gchar          *id,
+                                                           const gchar          *text,
+                                                           const gchar          *button_label,
+                                                           GSourceFunc           primary_action,
+                                                           GSourceFunc           secondary_action,
+                                                           gboolean              show_spinner,
+                                                           gpointer              user_data);
+
+void                     gtd_window_cancel_notification  (GtdWindow             *window,
+                                                          const gchar           *id);
+
 G_END_DECLS
 
 #endif /* GTD_WINDOW_H */

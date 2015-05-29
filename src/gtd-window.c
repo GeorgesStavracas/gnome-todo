@@ -550,5 +550,6 @@ gtd_window_cancel_notification (GtdWindow   *window,
       gtd_window_consume_notification (window);
     }
 
-  notification_data_free (data);
+  if (data)
+    notification_data_free (data);
 }

@@ -165,6 +165,7 @@ gtd_manager__remove_task_finished (GObject      *client,
                                                &error);
 
   gtd_object_set_ready (GTD_OBJECT (user_data), TRUE);
+  g_object_unref (user_data);
 
   if (error)
     {

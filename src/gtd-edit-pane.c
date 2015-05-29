@@ -58,6 +58,7 @@ enum {
 
 enum {
   EDIT_FINISHED,
+  REMOVE_TASK,
   NUM_SIGNALS
 };
 
@@ -65,6 +66,19 @@ static guint signals[NUM_SIGNALS] = { 0, };
 
 static void             gtd_edit_pane__date_selected              (GtkCalendar      *calendar,
                                                                    gpointer          user_data);
+
+static void
+gtd_edit_pane__delete_button_clicked (GtkButton *button,
+                                      gpointer   user_data)
+{
+  GtdEditPanePrivate *priv;
+
+  g_return_if_fail (GTD_IS_EDIT_PANE (user_data));
+
+  priv = GTD_EDIT_PANE (user_data)->priv;
+
+  g_signal_emit (user_data, signals[REMOVE_TASK], 0, priv->task);
+}
 
 static void
 gtd_edit_pane__close_button_clicked (GtkButton *button,
@@ -80,6 +94,8 @@ gtd_edit_pane__close_button_clicked (GtkButton *button,
   gtd_task_save (priv->task);
 
   g_signal_emit (user_data, signals[EDIT_FINISHED], 0, priv->task);
+
+  priv->task = NULL;
 }
 
 static void
@@ -150,8 +166,6 @@ gtd_edit_pane__date_selected (GtkCalendar *calendar,
 
   gtd_task_set_due_date (priv->task, new_dt);
   gtk_label_set_label (priv->date_label, text);
-
-  gtd_task_save (priv->task);
 
   g_date_time_unref (new_dt);
   g_free (text);
@@ -266,6 +280,22 @@ gtd_edit_pane_class_init (GtdEditPaneClass *klass)
                                          1,
                                          GTD_TYPE_TASK);
 
+  /**
+   * GtdEditPane::task-removed:
+   *
+   * Emitted when the the user finishes wants to remove the task.
+   */
+  signals[REMOVE_TASK] = g_signal_new ("remove-task",
+                                       GTD_TYPE_EDIT_PANE,
+                                       G_SIGNAL_RUN_LAST,
+                                       0,
+                                       NULL,
+                                       NULL,
+                                       NULL,
+                                       G_TYPE_NONE,
+                                       1,
+                                       GTD_TYPE_TASK);
+
   /* template class */
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/edit-pane.ui");
 
@@ -276,6 +306,7 @@ gtd_edit_pane_class_init (GtdEditPaneClass *klass)
 
   gtk_widget_class_bind_template_callback (widget_class, gtd_edit_pane__close_button_clicked);
   gtk_widget_class_bind_template_callback (widget_class, gtd_edit_pane__date_selected);
+  gtk_widget_class_bind_template_callback (widget_class, gtd_edit_pane__delete_button_clicked);
 }
 
 static void
@@ -370,14 +401,10 @@ gtd_edit_pane_set_task (GtdEditPane *pane,
     {
       if (priv->task)
         {
-          /* Save the old task before exiting */
-          gtd_task_save (priv->task);
-
-          gtd_manager_update_task (priv->manager, priv->task);
-          gtd_task_list_save_task (gtd_task_get_list (priv->task), task);
-
           g_clear_pointer (&priv->notes_binding, g_binding_unbind);
           g_clear_pointer (&priv->priority_binding, g_binding_unbind);
+
+          g_signal_emit (pane, signals[EDIT_FINISHED], 0, priv->task);
         }
 
       priv->task = task;

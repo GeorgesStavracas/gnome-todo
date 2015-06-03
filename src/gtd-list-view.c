@@ -309,10 +309,10 @@ gtd_list_view__row_activated (GtkListBox *listbox,
   if (row == priv->new_task_row)
     return;
 
+  gtd_edit_pane_set_task (priv->edit_pane, gtd_task_row_get_task (row));
+
   gtk_revealer_set_reveal_child (priv->edit_revealer, TRUE);
   gtd_arrow_frame_set_row (priv->arrow_frame, row);
-
-  gtd_edit_pane_set_task (priv->edit_pane, gtd_task_row_get_task (row));
 }
 
 static void

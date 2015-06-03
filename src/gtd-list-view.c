@@ -92,6 +92,8 @@ enum {
 static gboolean
 remove_task_action (RemoveTaskData *data)
 {
+  g_return_val_if_fail (data != NULL, G_SOURCE_REMOVE);
+
   gtd_manager_remove_task (data->view->priv->manager, data->task);
 
   g_free (data);
@@ -103,6 +105,8 @@ static gboolean
 undo_remove_task_action (RemoveTaskData *data)
 {
   GtdTaskList *list = gtd_task_get_list (data->task);
+
+  g_return_val_if_fail (data != NULL, G_SOURCE_REMOVE);
 
   gtd_task_list_save_task (list, data->task);
 
@@ -133,6 +137,8 @@ gtd_list_view__remove_task_cb (GtdEditPane *pane,
 
   /* Remove the task from the list */
   gtd_task_list_remove_task (gtd_task_get_list (task), task);
+
+  gtk_revealer_set_reveal_child (priv->edit_revealer, FALSE);
 
   gtd_window_notify (window,
                      7500, //ms

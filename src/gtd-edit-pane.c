@@ -34,7 +34,6 @@ typedef struct
   GBinding          *notes_binding;
   GBinding          *priority_binding;
 
-
   GtdManager        *manager;
   GtdTask           *task;
 } GtdEditPanePrivate;
@@ -78,6 +77,10 @@ gtd_edit_pane__delete_button_clicked (GtkButton *button,
   priv = GTD_EDIT_PANE (user_data)->priv;
 
   g_signal_emit (user_data, signals[REMOVE_TASK], 0, priv->task);
+
+  g_clear_pointer (&priv->notes_binding, g_binding_unbind);
+  g_clear_pointer (&priv->priority_binding, g_binding_unbind);
+  priv->task = NULL;
 }
 
 static void

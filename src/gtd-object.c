@@ -36,6 +36,39 @@ enum
   LAST_PROP
 };
 
+static const gchar*
+gtd_object_real_get_uid (GtdObject *object)
+{
+  GtdObjectPrivate *priv;
+
+  g_return_val_if_fail (GTD_IS_OBJECT (object), NULL);
+
+  priv = gtd_object_get_instance_private (object);
+
+  return priv->uid;
+}
+
+static void
+gtd_object_real_set_uid (GtdObject   *object,
+                         const gchar *uid)
+{
+  GtdObjectPrivate *priv;
+
+  g_assert (GTD_IS_OBJECT (object));
+
+  priv = gtd_object_get_instance_private (object);
+
+  if (g_strcmp0 (priv->uid, uid) != 0)
+    {
+      if (priv->uid)
+        g_free (priv->uid);
+
+      priv->uid = g_strdup (uid);
+
+      g_object_notify (G_OBJECT (object), "uid");
+    }
+}
+
 static void
 gtd_object_finalize (GObject *object)
 {
@@ -100,8 +133,8 @@ gtd_object_class_init (GtdObjectClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  klass->get_uid = gtd_object_get_uid;
-  klass->set_uid = gtd_object_set_uid;
+  klass->get_uid = gtd_object_real_get_uid;
+  klass->set_uid = gtd_object_real_set_uid;
 
   object_class->finalize = gtd_object_finalize;
   object_class->get_property = gtd_object_get_property;
@@ -170,13 +203,14 @@ gtd_object_new (const gchar *uid)
 const gchar*
 gtd_object_get_uid (GtdObject *object)
 {
-  GtdObjectPrivate *priv;
+  GtdObjectClass *class;
 
   g_return_val_if_fail (GTD_IS_OBJECT (object), NULL);
 
-  priv = gtd_object_get_instance_private (object);
+  class = GTD_OBJECT_GET_CLASS (object);
 
-  return priv->uid;
+  g_assert (class);
+  return class->get_uid (object);
 }
 
 /**
@@ -191,21 +225,14 @@ void
 gtd_object_set_uid (GtdObject   *object,
                     const gchar *uid)
 {
-  GtdObjectPrivate *priv;
+  GtdObjectClass *class;
 
-  g_assert (GTD_IS_OBJECT (object));
+  g_return_if_fail (GTD_IS_OBJECT (object));
 
-  priv = gtd_object_get_instance_private (object);
+  class = GTD_OBJECT_GET_CLASS (object);
 
-  if (g_strcmp0 (priv->uid, uid) != 0)
-    {
-      if (priv->uid)
-        g_free (priv->uid);
-
-      priv->uid = g_strdup (uid);
-
-      g_object_notify (G_OBJECT (object), "uid");
-    }
+  g_assert (class);
+  class->set_uid (object, uid);
 }
 
 /**

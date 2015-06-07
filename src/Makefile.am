@@ -3,6 +3,7 @@ AM_CPPFLAGS = \
 	-DPACKAGE_SRC_DIR=\""$(srcdir)"\" \
 	-DPACKAGE_DATA_DIR=\""$(pkgdatadir)"\" \
 	-DUI_DATA_DIR=\""$(pkgdatadir)/style"\" \
+	-DGOA_API_IS_SUBJECT_TO_CHANGE \
 	$(GNOME_TODO_CFLAGS)
 
 bin_PROGRAMS = gnome-todo
@@ -20,6 +21,10 @@ gnome_todo_SOURCES = \
 	gtd-edit-pane.c \
 	gtd-edit-pane.h \
 	gtd-enums.h \
+	gtd-goa-row.c \
+	gtd-goa-row.h \
+	gtd-initial-setup-window.c \
+	gtd-initial-setup-window.h \
 	gtd-list-view.c \
 	gtd-list-view.h \
 	gtd-manager.c \

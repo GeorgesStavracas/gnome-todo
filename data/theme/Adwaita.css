@@ -28,3 +28,7 @@ GtdArrowFrame:dir(ltr) {
 GtdArrowFrame:dir(rtl) {
     border-left-width: 0px;
 }
+
+GtkLabel.main-title {
+    font-size: 28px;
+}

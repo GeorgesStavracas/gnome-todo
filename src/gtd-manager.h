@@ -25,6 +25,7 @@
 #include "gtd-types.h"
 
 #include <libecal/libecal.h>
+#include <goa/goa.h>
 
 G_BEGIN_DECLS
 
@@ -51,6 +52,11 @@ void                    gtd_manager_remove_task           (GtdManager           
 
 void                    gtd_manager_update_task           (GtdManager           *manager,
                                                            GtdTask              *task);
+
+/* Online accounts */
+GoaClient*              gtd_manager_get_goa_client        (GtdManager           *manager);
+
+gboolean                gtd_manager_is_goa_client_ready   (GtdManager           *manager);
 
 G_END_DECLS
 

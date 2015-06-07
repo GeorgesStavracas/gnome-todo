@@ -21,6 +21,7 @@
 #endif
 
 #include "gtd-application.h"
+#include "gtd-initial-setup-window.h"
 #include "gtd-manager.h"
 #include "gtd-window.h"
 
@@ -36,6 +37,7 @@ typedef struct
   GtdManager     *manager;
 
   GtkWidget      *window;
+  GtkWidget      *initial_setup;
 } GtdApplicationPrivate;
 
 struct _GtdApplication
@@ -131,9 +133,59 @@ gtd_application_new (void)
 }
 
 static void
+run_window (GtdApplication *application)
+{
+  GtdApplicationPrivate *priv;
+
+  g_return_if_fail (GTD_IS_APPLICATION (application));
+
+  priv = application->priv;
+
+  if (!priv->window)
+    priv->window = gtd_window_new (GTD_APPLICATION (application));
+
+  gtk_widget_show (priv->window);
+}
+
+static void
+finish_initial_setup (GtdApplication *application)
+{
+  g_return_if_fail (GTD_IS_APPLICATION (application));
+
+  run_window (application);
+
+  g_clear_object (&application->priv->initial_setup);
+}
+
+static void
+run_initial_setup (GtdApplication *application)
+{
+  GtdApplicationPrivate *priv;
+
+  g_return_if_fail (GTD_IS_APPLICATION (application));
+
+  priv = application->priv;
+
+  if (!priv->initial_setup)
+    {
+      priv->initial_setup = gtd_initial_setup_window_new (application);
+
+      g_signal_connect_swapped (priv->initial_setup,
+                                "damage-event",
+                                G_CALLBACK (finish_initial_setup),
+                                application);
+    }
+
+  gtk_widget_show (priv->initial_setup);
+}
+
+static void
 gtd_application_activate (GApplication *application)
 {
   GtdApplicationPrivate *priv = GTD_APPLICATION (application)->priv;
+  gboolean first_run;
+
+  first_run = g_settings_get_boolean (priv->settings, "first-run");
 
   if (!priv->provider)
    {
@@ -165,11 +217,11 @@ gtd_application_activate (GApplication *application)
        }
    }
 
-  /* window */
-  if (priv->window == NULL)
-    priv->window = gtd_window_new (GTD_APPLICATION (application));
-
-  gtk_widget_show (priv->window);
+  /* If it's the first run of To Do, it should run the initial setup window */
+  if (first_run)
+    run_initial_setup (GTD_APPLICATION (application));
+  else
+    run_window (GTD_APPLICATION (application));
 }
 
 static void

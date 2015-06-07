@@ -30,6 +30,10 @@ typedef struct
   ECredentialsPrompter  *credentials_prompter;
   ESourceRegistry       *source_registry;
 
+  /* Online accounts */
+  GoaClient             *goa_client;
+  gboolean               goa_client_ready;
+
   /*
    * Small flag that contains the number of sources
    * that still have to be loaded. When this number
@@ -59,11 +63,43 @@ enum
 enum
 {
   PROP_0,
+  PROP_GOA_CLIENT,
+  PROP_GOA_CLIENT_READY,
   PROP_SOURCE_REGISTRY,
   LAST_PROP
 };
 
 static guint signals[NUM_SIGNALS] = { 0, };
+
+static void
+gtd_manager__goa_client_finish_cb (GObject      *client,
+                                   GAsyncResult *result,
+                                   gpointer      user_data)
+{
+  GtdManagerPrivate *priv;
+  GError *error;
+
+  g_return_if_fail (GTD_IS_MANAGER (user_data));
+
+  priv = GTD_MANAGER (user_data)->priv;
+  error = NULL;
+
+  priv->goa_client_ready = TRUE;
+  priv->goa_client = goa_client_new_finish (result, &error);
+
+  if (error)
+    {
+      g_warning ("%s: %s: %s",
+                 G_STRFUNC,
+                 _("Error loading GNOME Online Accounts"),
+                 error->message);
+
+      g_clear_error (&error);
+    }
+
+  g_object_notify (user_data, "goa-client-ready");
+  g_object_notify (user_data, "goa-client");
+}
 
 static void
 gtd_manager__commit_source_finished (GObject      *registry,
@@ -539,7 +575,8 @@ static void
 gtd_manager_finalize (GObject *object)
 {
   GtdManager *self = (GtdManager *)object;
-  GtdManagerPrivate *priv = gtd_manager_get_instance_private (self);
+
+  g_clear_object (&self->priv->goa_client);
 
   G_OBJECT_CLASS (gtd_manager_parent_class)->finalize (object);
 }
@@ -591,6 +628,11 @@ gtd_manager_constructed (GObject *object)
   e_source_registry_new (NULL,
                          (GAsyncReadyCallback) gtd_manager__source_registry_finish_cb,
                          object);
+
+  /* online accounts */
+  goa_client_new (NULL,
+                  (GAsyncReadyCallback) gtd_manager__goa_client_finish_cb,
+                  object);
 }
 
 static void
@@ -602,6 +644,34 @@ gtd_manager_class_init (GtdManagerClass *klass)
   object_class->get_property = gtd_manager_get_property;
   object_class->set_property = gtd_manager_set_property;
   object_class->constructed = gtd_manager_constructed;
+
+  /**
+   * GtdManager::goa-client:
+   *
+   * The #GoaClient asyncronously loaded.
+   */
+  g_object_class_install_property (
+        object_class,
+        PROP_GOA_CLIENT,
+        g_param_spec_object ("goa-client",
+                            _("The online accounts client of the manager"),
+                            _("The read-only GNOME online accounts client loaded and owned by the manager"),
+                            GOA_TYPE_CLIENT,
+                            G_PARAM_READABLE));
+
+  /**
+   * GtdManager::goa-client-ready:
+   *
+   * Whether the GNOME Online Accounts client is loaded.
+   */
+  g_object_class_install_property (
+        object_class,
+        PROP_GOA_CLIENT_READY,
+        g_param_spec_boolean ("goa-client-ready",
+                              _("Whether GNOME Online Accounts client is ready"),
+                              _("Whether the read-only GNOME online accounts client is loaded"),
+                              FALSE,
+                              G_PARAM_READABLE));
 
   /**
    * GtdManager::source-registry:
@@ -848,4 +918,40 @@ gtd_manager_save_task_list (GtdManager  *manager,
                                    NULL,
                                    (GAsyncReadyCallback) gtd_manager__commit_source_finished,
                                    manager);
+}
+
+/**
+ * gtd_manager_get_goa_client:
+ * @manager: a #GtdManager
+ *
+ * Retrieves the internal @GoaClient from @manager. %NULL doesn't mean
+ * that the client is not ready, use @gtd_manager_is_goa_client_ready to
+ * check that.
+ *
+ * Returns: (transfer none): the internal #GoaClient of @manager
+ */
+GoaClient*
+gtd_manager_get_goa_client (GtdManager *manager)
+{
+  g_return_val_if_fail (GTD_IS_MANAGER (manager), NULL);
+
+  return manager->priv->goa_client;
+}
+
+/**
+ * gtd_manager_is_goa_client_ready:
+ *
+ * Checks whether @manager's internal #GoaClient is ready. Note that,
+ * in the case of failure, it'll return %TRUE and @gtd_manager_get_goa_client
+ * will return %NULL.
+ *
+ * Returns: %TRUE if @manager's internal #GoaClient is already
+ * loaded, %FALSE otherwise.
+ */
+gboolean
+gtd_manager_is_goa_client_ready (GtdManager *manager)
+{
+  g_return_val_if_fail (GTD_IS_MANAGER (manager), FALSE);
+
+  return manager->priv->goa_client_ready;
 }

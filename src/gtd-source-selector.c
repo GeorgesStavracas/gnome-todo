@@ -1,4 +1,4 @@
-/* gtd-types.h
+/* gtd-source-selector.c
  *
  * Copyright (C) 2015 Georges Basile Stavracas Neto <georges.stavracas@gmail.com>
  *
@@ -16,26 +16,4 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GTD_TYPES_H
-#define GTD_TYPES_H
 
-#include <glib-object.h>
-
-#include "gtd-enums.h"
-
-G_BEGIN_DECLS
-
-typedef struct _GtdApplication          GtdApplication;
-typedef struct _GtdInitialSetupWindow   GtdInitialSetupWindow;
-typedef struct _GtdListView             GtdListView;
-typedef struct _GtdManager              GtdManager;
-typedef struct _GtdObject               GtdObject;
-typedef struct _GtdTask                 GtdTask;
-typedef struct _GtdTaskList             GtdTaskList;
-typedef struct _GtdTaskListItem         GtdTaskListItem;
-typedef struct _GtdTaskRow              GtdTaskRow;
-typedef struct _GtdWindow               GtdWindow;
-
-G_END_DECLS
-
-#endif /* GTD_TYPES_H */

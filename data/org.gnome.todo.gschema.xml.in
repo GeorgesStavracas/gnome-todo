@@ -16,5 +16,15 @@
             <_summary>Window position</_summary>
             <_description>Window position (x and y).</_description>
         </key>
+        <key name="first-run" type="b">
+              <default>true</default>
+              <_summary>First run of GNOME To Do</_summary>
+              <_description>Whether it's the first run of GNOME To Do (to run the initial setup) or not</_description>
+          </key>
+          <key name="store-location" type="s">
+              <default>"local"</default>
+              <_summary>Default location to add new lists to</_summary>
+              <_description>The identifier of the default location to add new lists to</_description>
+          </key>
     </schema>
 </schemalist>

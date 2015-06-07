@@ -1,4 +1,4 @@
-/* gtd-types.h
+/* gtd-initial-setup-window.h
  *
  * Copyright (C) 2015 Georges Basile Stavracas Neto <georges.stavracas@gmail.com>
  *
@@ -16,26 +16,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GTD_TYPES_H
-#define GTD_TYPES_H
+#ifndef GTD_INITIAL_SETUP_WINDOW_H
+#define GTD_INITIAL_SETUP_WINDOW_H
+
+#include "gtd-types.h"
 
 #include <glib-object.h>
-
-#include "gtd-enums.h"
+#include <gtk/gtk.h>
 
 G_BEGIN_DECLS
 
-typedef struct _GtdApplication          GtdApplication;
-typedef struct _GtdInitialSetupWindow   GtdInitialSetupWindow;
-typedef struct _GtdListView             GtdListView;
-typedef struct _GtdManager              GtdManager;
-typedef struct _GtdObject               GtdObject;
-typedef struct _GtdTask                 GtdTask;
-typedef struct _GtdTaskList             GtdTaskList;
-typedef struct _GtdTaskListItem         GtdTaskListItem;
-typedef struct _GtdTaskRow              GtdTaskRow;
-typedef struct _GtdWindow               GtdWindow;
+#define GTD_TYPE_INITIAL_SETUP_WINDOW (gtd_initial_setup_window_get_type())
+
+G_DECLARE_FINAL_TYPE (GtdInitialSetupWindow, gtd_initial_setup_window, GTD, INITIAL_SETUP_WINDOW, GtkApplicationWindow)
+
+GtkWidget*                gtd_initial_setup_window_new           (GtdApplication            *manager);
 
 G_END_DECLS
 
-#endif /* GTD_TYPES_H */
+#endif /* GTD_INITIAL_SETUP_WINDOW_H */

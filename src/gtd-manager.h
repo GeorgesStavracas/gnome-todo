@@ -37,6 +37,8 @@ GtdManager*             gtd_manager_new                   (void);
 
 ESourceRegistry*        gtd_manager_get_source_registry   (GtdManager           *manager);
 
+GList*                  gtd_manager_get_task_lists        (GtdManager           *manager);
+
 void                    gtd_manager_remove_task_list      (GtdManager           *manager,
                                                            GtdTaskList          *list);
 

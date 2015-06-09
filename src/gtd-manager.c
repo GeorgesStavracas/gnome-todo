@@ -27,6 +27,7 @@
 typedef struct
 {
   GHashTable            *clients;
+  GList                 *task_lists;
   ECredentialsPrompter  *credentials_prompter;
   ESourceRegistry       *source_registry;
 
@@ -152,6 +153,10 @@ gtd_manager__remove_source_finished (GObject      *source,
 
       g_error_free (error);
       return;
+    }
+  else
+    {
+      priv->task_lists = g_list_remove (priv->task_lists, source);
     }
 }
 
@@ -425,6 +430,8 @@ gtd_manager__on_client_connected (GObject      *source_object,
                                              (GAsyncReadyCallback) gtd_manager__fill_task_list,
                                              list);
 
+
+      priv->task_lists = g_list_append (priv->task_lists, list);
 
       g_object_set_data (G_OBJECT (source), "task-list", list);
       g_hash_table_insert (priv->clients, source, client);
@@ -954,4 +961,20 @@ gtd_manager_is_goa_client_ready (GtdManager *manager)
   g_return_val_if_fail (GTD_IS_MANAGER (manager), FALSE);
 
   return manager->priv->goa_client_ready;
+}
+
+/**
+ * gtd_manager_get_task_lists:
+ * @manager: a #GtdManager
+ *
+ * Retrieves the list of #GtdTaskList already loaded.
+ *
+ * Returns: (transfer full): a newly allocated list of #GtdTaskList, or %NULL if none.
+ */
+GList*
+gtd_manager_get_task_lists (GtdManager *manager)
+{
+  g_return_val_if_fail (GTD_IS_MANAGER (manager), NULL);
+
+  return g_list_copy (manager->priv->task_lists);
 }

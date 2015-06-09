@@ -209,6 +209,7 @@
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
                 <property name="draw_indicator">True</property>
+                <signal name="toggled" handler="gtd_initial_setup_window__check_toggled" object="GtdInitialSetupWindow" swapped="yes" />
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -246,6 +247,7 @@
             <property name="sensitive">False</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
+            <signal name="clicked" handler="gtd_initial_setup_window__button_clicked" object="GtdInitialSetupWindow" swapped="yes" />
             <style>
               <class name="suggested-action"/>
             </style>

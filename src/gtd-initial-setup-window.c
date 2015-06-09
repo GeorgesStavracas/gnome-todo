@@ -26,6 +26,7 @@
 typedef struct
 {
   GtkWidget                 *cancel_button;
+  GtkWidget                 *done_button;
   GtkWidget                 *listbox;
 
   /* stub rows */
@@ -33,6 +34,7 @@ typedef struct
   GtkWidget                 *google_stub_row;
   GtkWidget                 *owncloud_stub_row;
 
+  GtdApplication            *application;
   GtdManager                *manager;
 } GtdInitialSetupWindowPrivate;
 
@@ -178,8 +180,53 @@ gtd_initial_setup_window__listbox_row_activated (GtdInitialSetupWindow *window,
       else
         {
           gtd_goa_row_set_selected (GTD_GOA_ROW (row), TRUE);
+          gtk_widget_set_sensitive (priv->done_button, TRUE);
+
+          gtd_application_set_storage_location (priv->application, goa_account_get_id (account));
         }
     }
+}
+
+static void
+gtd_initial_setup_window__check_toggled (GtdInitialSetupWindow *window,
+                                         GtkToggleButton       *check)
+{
+  GtdInitialSetupWindowPrivate *priv;
+
+
+  g_return_if_fail (GTD_IS_INITIAL_SETUP_WINDOW (window));
+
+  priv = window->priv;
+
+  /*
+   * Unset the currently selected storage location row when the check button is
+   * activated. No need to do this when deactivated, since we already did.
+   */
+
+  if (gtk_toggle_button_get_active (check))
+    {
+      GList *children;
+      GList *l;
+
+      children = gtk_container_get_children (GTK_CONTAINER (priv->listbox));
+
+      for (l = children; l != NULL; l = l->next)
+        {
+          if (GTD_IS_GOA_ROW (l->data))
+            gtd_goa_row_set_selected (l->data, FALSE);
+        }
+
+      g_list_free (children);
+
+      /*
+       * Sets the storage location to "local", and don't unset it if the
+       * check gets deactivated.
+       */
+      gtd_application_set_storage_location (priv->application, "local");
+    }
+
+  /* Done button is always enabled for local sources */
+  gtk_widget_set_sensitive (priv->done_button, gtk_toggle_button_get_active (check));
 }
 
 static void
@@ -192,9 +239,18 @@ gtd_initial_setup_window__button_clicked (GtdInitialSetupWindow *window,
 
   priv = window->priv;
 
-  g_signal_emit (window,
-                 button == priv->cancel_button ? signals[CANCEL] : signals[DONE],
-                 0);
+  if (button == priv->cancel_button)
+    {
+      g_signal_emit (window,
+                     signals[CANCEL],
+                     0);
+    }
+  else if (button == priv->done_button)
+    {
+      g_signal_emit (window,
+                     signals[DONE],
+                     0);
+    }
 }
 
 static void
@@ -384,12 +440,14 @@ gtd_initial_setup_window_class_init (GtdInitialSetupWindowClass *klass)
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/initial-setup.ui");
 
   gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, cancel_button);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, done_button);
   gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, exchange_stub_row);
   gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, google_stub_row);
   gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, listbox);
   gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, owncloud_stub_row);
 
   gtk_widget_class_bind_template_callback (widget_class, gtd_initial_setup_window__button_clicked);
+  gtk_widget_class_bind_template_callback (widget_class, gtd_initial_setup_window__check_toggled);
   gtk_widget_class_bind_template_callback (widget_class, gtd_initial_setup_window__listbox_row_activated);
 }
 
@@ -404,10 +462,16 @@ gtd_initial_setup_window_init (GtdInitialSetupWindow *self)
 GtkWidget*
 gtd_initial_setup_window_new (GtdApplication *application)
 {
+  GtdInitialSetupWindow *window;
+
   g_return_val_if_fail (GTD_IS_APPLICATION (application), NULL);
 
-  return g_object_new (GTD_TYPE_INITIAL_SETUP_WINDOW,
-                       "application", application,
-                       "manager", gtd_application_get_manager (application),
-                       NULL);
+  window = g_object_new (GTD_TYPE_INITIAL_SETUP_WINDOW,
+                         "application", application,
+                         "manager", gtd_application_get_manager (application),
+                         NULL);
+
+  window->priv->application = application;
+
+  return GTK_WIDGET (window);
 }

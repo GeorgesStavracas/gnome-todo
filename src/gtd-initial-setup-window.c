@@ -25,6 +25,7 @@
 
 typedef struct
 {
+  GtkWidget                 *cancel_button;
   GtkWidget                 *listbox;
 
   /* stub rows */
@@ -43,7 +44,7 @@ struct _GtdInitialSetupWindow
   GtdInitialSetupWindowPrivate *priv;
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GtdInitialSetupWindow, gtd_initial_setup_window, GTK_TYPE_WINDOW)
+G_DEFINE_TYPE_WITH_PRIVATE (GtdInitialSetupWindow, gtd_initial_setup_window, GTK_TYPE_APPLICATION_WINDOW)
 
 const gchar *supported_providers[] = {
   "exchange",
@@ -57,6 +58,14 @@ enum {
   PROP_MANAGER,
   LAST_PROP
 };
+
+enum {
+  CANCEL,
+  DONE,
+  LAST_SIGNAL
+};
+
+static guint signals[LAST_SIGNAL] = { 0, };
 
 static void
 spawn (gchar *action,
@@ -171,6 +180,21 @@ gtd_initial_setup_window__listbox_row_activated (GtdInitialSetupWindow *window,
           gtd_goa_row_set_selected (GTD_GOA_ROW (row), TRUE);
         }
     }
+}
+
+static void
+gtd_initial_setup_window__button_clicked (GtdInitialSetupWindow *window,
+                                          GtkWidget             *button)
+{
+  GtdInitialSetupWindowPrivate *priv;
+
+  g_return_if_fail (GTD_IS_INITIAL_SETUP_WINDOW (window));
+
+  priv = window->priv;
+
+  g_signal_emit (window,
+                 button == priv->cancel_button ? signals[CANCEL] : signals[DONE],
+                 0);
 }
 
 static void
@@ -312,6 +336,38 @@ gtd_initial_setup_window_class_init (GtdInitialSetupWindowClass *klass)
   object_class->set_property = gtd_initial_setup_window_set_property;
 
   /**
+   * GtdInitialSetupWindow::cancel:
+   *
+   * Emitted when the Cancel button is clicked. Should quit the
+   * application.
+   */
+  signals[CANCEL] = g_signal_new ("cancel",
+                                  GTD_TYPE_INITIAL_SETUP_WINDOW,
+                                  G_SIGNAL_RUN_LAST,
+                                  0,
+                                  NULL,
+                                  NULL,
+                                  NULL,
+                                  G_TYPE_NONE,
+                                  0);
+
+  /**
+   * GtdInitialSetupWindow::done:
+   *
+   * Emitted when the Done button is clicked. Should start the
+   * application.
+   */
+  signals[DONE] = g_signal_new ("done",
+                                GTD_TYPE_INITIAL_SETUP_WINDOW,
+                                G_SIGNAL_RUN_LAST,
+                                0,
+                                NULL,
+                                NULL,
+                                NULL,
+                                G_TYPE_NONE,
+                                0);
+
+  /**
    * GtdInitialSetupWindow::manager:
    *
    * Manager of the application.
@@ -327,11 +383,13 @@ gtd_initial_setup_window_class_init (GtdInitialSetupWindowClass *klass)
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/initial-setup.ui");
 
+  gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, cancel_button);
   gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, exchange_stub_row);
   gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, google_stub_row);
   gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, listbox);
   gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, owncloud_stub_row);
 
+  gtk_widget_class_bind_template_callback (widget_class, gtd_initial_setup_window__button_clicked);
   gtk_widget_class_bind_template_callback (widget_class, gtd_initial_setup_window__listbox_row_activated);
 }
 
@@ -344,11 +402,12 @@ gtd_initial_setup_window_init (GtdInitialSetupWindow *self)
 }
 
 GtkWidget*
-gtd_initial_setup_window_new (GtdManager *manager)
+gtd_initial_setup_window_new (GtdApplication *application)
 {
-  g_return_val_if_fail (GTD_IS_MANAGER (manager), NULL);
+  g_return_val_if_fail (GTD_IS_APPLICATION (application), NULL);
 
   return g_object_new (GTD_TYPE_INITIAL_SETUP_WINDOW,
-                       "manager", manager,
+                       "application", application,
+                       "manager", gtd_application_get_manager (application),
                        NULL);
 }

@@ -168,10 +168,15 @@ run_initial_setup (GtdApplication *application)
 
   if (!priv->initial_setup)
     {
-      priv->initial_setup = gtd_initial_setup_window_new (priv->manager);
+      priv->initial_setup = gtd_initial_setup_window_new (application);
+
+      g_signal_connect (priv->initial_setup,
+                        "cancel",
+                        G_CALLBACK (gtk_widget_destroy),
+                        application);
 
       g_signal_connect_swapped (priv->initial_setup,
-                                "damage-event",
+                                "done",
                                 G_CALLBACK (finish_initial_setup),
                                 application);
     }

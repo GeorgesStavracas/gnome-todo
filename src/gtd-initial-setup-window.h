@@ -28,9 +28,9 @@ G_BEGIN_DECLS
 
 #define GTD_TYPE_INITIAL_SETUP_WINDOW (gtd_initial_setup_window_get_type())
 
-G_DECLARE_FINAL_TYPE (GtdInitialSetupWindow, gtd_initial_setup_window, GTD, INITIAL_SETUP_WINDOW, GtkWindow)
+G_DECLARE_FINAL_TYPE (GtdInitialSetupWindow, gtd_initial_setup_window, GTD, INITIAL_SETUP_WINDOW, GtkApplicationWindow)
 
-GtkWidget*                gtd_initial_setup_window_new           (GtdManager         *manager);
+GtkWidget*                gtd_initial_setup_window_new           (GtdApplication     *application);
 
 G_END_DECLS
 

@@ -168,7 +168,7 @@ run_initial_setup (GtdApplication *application)
 
   if (!priv->initial_setup)
     {
-      priv->initial_setup = gtd_initial_setup_window_new (application);
+      priv->initial_setup = gtd_initial_setup_window_new (priv->manager);
 
       g_signal_connect_swapped (priv->initial_setup,
                                 "damage-event",

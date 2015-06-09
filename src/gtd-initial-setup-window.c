@@ -43,7 +43,7 @@ struct _GtdInitialSetupWindow
   GtdInitialSetupWindowPrivate *priv;
 };
 
-G_DEFINE_TYPE_WITH_PRIVATE (GtdInitialSetupWindow, gtd_initial_setup_window, GTK_TYPE_APPLICATION_WINDOW)
+G_DEFINE_TYPE_WITH_PRIVATE (GtdInitialSetupWindow, gtd_initial_setup_window, GTK_TYPE_WINDOW)
 
 const gchar *supported_providers[] = {
   "exchange",
@@ -344,12 +344,11 @@ gtd_initial_setup_window_init (GtdInitialSetupWindow *self)
 }
 
 GtkWidget*
-gtd_initial_setup_window_new (GtdApplication *application)
+gtd_initial_setup_window_new (GtdManager *manager)
 {
-  g_return_val_if_fail (GTD_IS_APPLICATION (application), NULL);
+  g_return_val_if_fail (GTD_IS_MANAGER (manager), NULL);
 
   return g_object_new (GTD_TYPE_INITIAL_SETUP_WINDOW,
-                       "application", application,
-                       "manager", gtd_application_get_manager (application),
+                       "manager", manager,
                        NULL);
 }

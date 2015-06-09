@@ -378,6 +378,8 @@ gtd_window_set_property (GObject      *object,
                          GParamSpec   *pspec)
 {
   GtdWindow *self = GTD_WINDOW (object);
+  GList *lists;
+  GList *l;
 
   switch (prop_id)
     {
@@ -394,6 +396,18 @@ gtd_window_set_property (GObject      *object,
                         "list-added",
                         G_CALLBACK (gtd_window__list_added),
                         self);
+
+      /* Add already loaded lists */
+      lists = gtd_manager_get_task_lists (self->priv->manager);
+
+      for (l = lists; l != NULL; l = l->next)
+        {
+          gtd_window__list_added (self->priv->manager,
+                                  l->data,
+                                  object);
+        }
+
+      g_list_free (lists);
 
       g_object_notify (object, "manager");
       break;

@@ -154,7 +154,7 @@ finish_initial_setup (GtdApplication *application)
 
   run_window (application);
 
-  g_clear_object (&application->priv->initial_setup);
+  g_clear_pointer (&application->priv->initial_setup, gtk_widget_destroy);
 }
 
 static void
@@ -288,4 +288,39 @@ gtd_application_get_manager (GtdApplication *app)
   g_return_val_if_fail (GTD_IS_APPLICATION (app), NULL);
 
   return app->priv->manager;
+}
+
+/**
+ * gtd_application_get_storage_location:
+ *
+ * Retrieves the default storage location for new #GtdTaskList.
+ *
+ * Returns: (transfer full): a newly allocated string containing the default
+ * storage location. "local" is the default.
+ */
+gchar*
+gtd_application_get_storage_location (GtdApplication *app)
+{
+  g_return_val_if_fail (GTD_IS_APPLICATION (app), NULL);
+
+  return g_settings_get_string (app->priv->settings, "storage-location");
+}
+
+/**
+ * gtd_application_set_storage_location:
+ *
+ * Sets the default storage location for the application. New lists will
+ * be created there by default.
+ *
+ * Returns:
+ */
+void
+gtd_application_set_storage_location (GtdApplication *application,
+                                      const gchar    *location)
+{
+  g_return_if_fail (GTD_IS_APPLICATION (application));
+
+  g_settings_set_string (application->priv->settings,
+                         "storage-location",
+                         location);
 }

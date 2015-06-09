@@ -33,6 +33,11 @@ GtdApplication*                 gtd_application_new                     (void);
 
 GtdManager*                     gtd_application_get_manager             (GtdApplication         *application);
 
+gchar*                          gtd_application_get_storage_location    (GtdApplication         *app);
+
+void                            gtd_application_set_storage_location    (GtdApplication         *application,
+                                                                         const gchar            *location);
+
 G_END_DECLS
 
 #endif /* GTD_APPLICATION_H */

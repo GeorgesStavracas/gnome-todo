@@ -403,12 +403,6 @@ gtd_task_list_item_set_property (GObject      *object,
                        "task-updated",
                         G_CALLBACK (gtd_task_list_item__task_changed),
                         self);
-
-      g_object_bind_property (priv->spinner,
-                              "visible",
-                              priv->list,
-                              "ready",
-                              G_BINDING_DEFAULT | G_BINDING_SYNC_CREATE);
       break;
 
     default:

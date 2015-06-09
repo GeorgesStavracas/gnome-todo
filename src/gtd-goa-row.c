@@ -98,8 +98,12 @@ gtd_goa_row_set_property (GObject      *object,
 
       gtk_label_set_label (self->priv->provider, goa_account_get_provider_name (self->priv->account));
       gtk_label_set_label (self->priv->name, goa_account_get_identity (self->priv->account));
-      gtk_widget_set_visible (GTK_WIDGET (self->priv->enabled),
-                              goa_account_get_calendar_disabled (self->priv->account));
+      g_object_bind_property (self->priv->account,
+                              "calendar-disabled",
+                              self->priv->enabled,
+                              "visible",
+                              G_BINDING_DEFAULT | G_BINDING_SYNC_CREATE);
+
       gtk_image_set_from_icon_name (self->priv->icon,
                                     str,
                                     GTK_ICON_SIZE_DND);

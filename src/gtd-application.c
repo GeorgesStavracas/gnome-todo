@@ -154,6 +154,10 @@ finish_initial_setup (GtdApplication *application)
 
   run_window (application);
 
+  g_settings_set_boolean (application->priv->settings,
+                          "first-run",
+                          FALSE);
+
   g_clear_pointer (&application->priv->initial_setup, gtk_widget_destroy);
 }
 

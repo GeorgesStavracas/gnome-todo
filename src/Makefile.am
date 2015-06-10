@@ -31,6 +31,8 @@ gnome_todo_SOURCES = \
 	gtd-manager.h \
 	gtd-object.c \
 	gtd-object.h \
+	gtd-storage-selector.c \
+	gtd-storage-selector.h \
 	gtd-task.c \
 	gtd-task.h \
 	gtd-task-list.c \

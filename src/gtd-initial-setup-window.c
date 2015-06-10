@@ -27,12 +27,7 @@ typedef struct
 {
   GtkWidget                 *cancel_button;
   GtkWidget                 *done_button;
-  GtkWidget                 *listbox;
-
-  /* stub rows */
-  GtkWidget                 *exchange_stub_row;
-  GtkWidget                 *google_stub_row;
-  GtkWidget                 *owncloud_stub_row;
+  GtkWidget                 *storage_selector;
 
   GtdApplication            *application;
   GtdManager                *manager;
@@ -47,13 +42,6 @@ struct _GtdInitialSetupWindow
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (GtdInitialSetupWindow, gtd_initial_setup_window, GTK_TYPE_APPLICATION_WINDOW)
-
-const gchar *supported_providers[] = {
-  "exchange",
-  "google",
-  "owncloud",
-  NULL
-};
 
 enum {
   PROP_0,
@@ -70,163 +58,19 @@ enum {
 static guint signals[LAST_SIGNAL] = { 0, };
 
 static void
-spawn (gchar *action,
-       gchar *arg)
-{
-  gchar *command[] = {"gnome-control-center", "online-accounts", action, arg, NULL};
-  g_spawn_async (NULL, command, NULL, G_SPAWN_SEARCH_PATH | G_SPAWN_STDOUT_TO_DEV_NULL, NULL, NULL, NULL, NULL);
-}
-
-/**
- * display_header_func:
- *
- * Shows a separator before each row.
- */
-static void
-display_header_func (GtkListBoxRow *row,
-                     GtkListBoxRow *before,
-                     gpointer       user_data)
-{
-  if (before != NULL)
-    {
-      GtkWidget *header;
-
-      header = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
-
-      gtk_list_box_row_set_header (row, header);
-      gtk_widget_show (header);
-    }
-}
-
-static gint
-sort_func (GtkListBoxRow *row1,
-           GtkListBoxRow *row2,
-           gpointer       user_data)
-{
-  GoaAccount *a1;
-  GoaAccount *a2;
-  GtdGoaRow *r1;
-  GtdGoaRow *r2;
-  gint retval;
-
-  if (!GTD_IS_GOA_ROW (row1))
-    return 1;
-  if (!GTD_IS_GOA_ROW (row2))
-    return -1;
-
-  r1 = GTD_GOA_ROW (row1);
-  r2 = GTD_GOA_ROW (row2);
-
-  a1 = gtd_goa_row_get_account (r1);
-  a2 = gtd_goa_row_get_account (r2);
-
-  retval = g_strcmp0 (goa_account_get_provider_type (a1), goa_account_get_provider_type (a2));
-
-  if (retval != 0)
-    return retval;
-  else
-    return g_strcmp0 (goa_account_get_identity (a1), goa_account_get_identity (a2));
-}
-
-static void
-gtd_initial_setup_window__listbox_row_activated (GtdInitialSetupWindow *window,
-                                                 GtkWidget             *row)
+gtd_initial_setup_window__location_selected (GtdInitialSetupWindow *window,
+                                             const gchar           *location)
 {
   GtdInitialSetupWindowPrivate *priv;
 
   g_return_if_fail (GTD_IS_INITIAL_SETUP_WINDOW (window));
 
-  priv = window->priv;
+  priv = GTD_INITIAL_SETUP_WINDOW (window)->priv;
 
-  /* The row is either one of the stub rows, or a GtdGoaRow */
-  if (row == priv->google_stub_row)
-    {
-      spawn ("add", "google");
-    }
-  else if (row == priv->owncloud_stub_row)
-    {
-      spawn ("add", "owncloud");
-    }
-  else if (row == priv->exchange_stub_row)
-    {
-      spawn ("add", "exchange");
-    }
-  else
-    {
-      GoaAccount *account;
-      GList *children;
-      GList *l;
+  gtk_widget_set_sensitive (priv->done_button, location != NULL);
 
-      children = gtk_container_get_children (GTK_CONTAINER (priv->listbox));
-      account = gtd_goa_row_get_account (GTD_GOA_ROW (row));
-
-      for (l = children; l != NULL; l = l->next)
-        {
-          if (GTD_IS_GOA_ROW (l->data))
-            gtd_goa_row_set_selected (l->data, FALSE);
-        }
-
-      g_list_free (children);
-
-      /*
-       * If the account has it's calendars disabled, we cannot let it
-       * be a default storage location. Instead, open the Control Center
-       * to give the user the ability to change it.
-       */
-      if (goa_account_get_calendar_disabled (account))
-        {
-          spawn ((gchar*) goa_account_get_id (account), NULL);
-        }
-      else
-        {
-          gtd_goa_row_set_selected (GTD_GOA_ROW (row), TRUE);
-          gtk_widget_set_sensitive (priv->done_button, TRUE);
-
-          gtd_application_set_storage_location (priv->application, goa_account_get_id (account));
-        }
-    }
-}
-
-static void
-gtd_initial_setup_window__check_toggled (GtdInitialSetupWindow *window,
-                                         GtkToggleButton       *check)
-{
-  GtdInitialSetupWindowPrivate *priv;
-
-
-  g_return_if_fail (GTD_IS_INITIAL_SETUP_WINDOW (window));
-
-  priv = window->priv;
-
-  /*
-   * Unset the currently selected storage location row when the check button is
-   * activated. No need to do this when deactivated, since we already did.
-   */
-
-  if (gtk_toggle_button_get_active (check))
-    {
-      GList *children;
-      GList *l;
-
-      children = gtk_container_get_children (GTK_CONTAINER (priv->listbox));
-
-      for (l = children; l != NULL; l = l->next)
-        {
-          if (GTD_IS_GOA_ROW (l->data))
-            gtd_goa_row_set_selected (l->data, FALSE);
-        }
-
-      g_list_free (children);
-
-      /*
-       * Sets the storage location to "local", and don't unset it if the
-       * check gets deactivated.
-       */
-      gtd_application_set_storage_location (priv->application, "local");
-    }
-
-  /* Done button is always enabled for local sources */
-  gtk_widget_set_sensitive (priv->done_button, gtk_toggle_button_get_active (check));
+  if (location)
+    gtd_application_set_storage_location (priv->application, location);
 }
 
 static void
@@ -251,73 +95,6 @@ gtd_initial_setup_window__button_clicked (GtdInitialSetupWindow *window,
                      signals[DONE],
                      0);
     }
-}
-
-static void
-gtd_initial_setup_window__fill_accounts (GtdInitialSetupWindow *window)
-{
-  GtdInitialSetupWindowPrivate *priv;
-  GoaClient *goa_client;
-  GList *accounts;
-  GList *l;
-
-  g_return_if_fail (GTD_IS_INITIAL_SETUP_WINDOW (window));
-
-  priv = GTD_INITIAL_SETUP_WINDOW (window)->priv;
-  goa_client = gtd_manager_get_goa_client (priv->manager);
-
-  /* load accounts */
-  accounts = goa_client_get_accounts (goa_client);
-
-  for (l = accounts; l != NULL; l = l->next)
-    {
-      const gchar* provider;
-      GoaObject *object;
-      GoaAccount *account;
-
-      object = l->data;
-      account = goa_object_get_account (object);
-      provider = goa_account_get_provider_type (account);
-
-      if (g_strv_contains (supported_providers, provider))
-        {
-          GtkWidget *row;
-
-          row = gtd_goa_row_new (account);
-
-          gtk_container_add (GTK_CONTAINER (priv->listbox), row);
-
-          /* hide the related stub row */
-          if (g_strcmp0 (provider, "exchange") == 0)
-            gtk_widget_hide (priv->exchange_stub_row);
-          if (g_strcmp0 (provider, "google") == 0)
-            gtk_widget_hide (priv->google_stub_row);
-          if (g_strcmp0 (provider, "owncloud") == 0)
-            gtk_widget_hide (priv->owncloud_stub_row);
-        }
-    }
-
-  g_list_free_full (accounts, g_object_unref);
-}
-
-
-static void
-gtd_initial_setup_window_constructed (GObject *object)
-{
-  GtdInitialSetupWindowPrivate *priv;
-
-  G_OBJECT_CLASS (gtd_initial_setup_window_parent_class)->constructed (object);
-
-  priv = GTD_INITIAL_SETUP_WINDOW (object)->priv;
-
-  gtk_list_box_set_header_func (GTK_LIST_BOX (priv->listbox),
-                                display_header_func,
-                                NULL,
-                                NULL);
-  gtk_list_box_set_sort_func (GTK_LIST_BOX (priv->listbox),
-                              (GtkListBoxSortFunc) sort_func,
-                              NULL,
-                              NULL);
 }
 
 static void
@@ -360,24 +137,28 @@ gtd_initial_setup_window_set_property (GObject      *object,
     {
     case PROP_MANAGER:
       self->priv->manager = g_value_get_object (value);
-
-      if (gtd_manager_is_goa_client_ready (self->priv->manager))
-        {
-          gtd_initial_setup_window__fill_accounts (self);
-        }
-      else
-        {
-          g_signal_connect_swapped (self->priv->manager,
-                                    "notify::goa-client-ready",
-                                    G_CALLBACK (gtd_initial_setup_window__fill_accounts),
-                                    self);
-        }
-
+      g_object_notify (object, "manager");
       break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     }
+}
+
+static void
+gtd_initial_setup_window_constructed (GObject *object)
+{
+  GtdInitialSetupWindowPrivate *priv;
+
+  G_OBJECT_CLASS (gtd_initial_setup_window_parent_class)->constructed (object);
+
+  priv = GTD_INITIAL_SETUP_WINDOW (object)->priv;
+
+  g_object_bind_property (object,
+                          "manager",
+                          priv->storage_selector,
+                          "manager",
+                          G_BINDING_DEFAULT);
 }
 
 static void
@@ -441,14 +222,10 @@ gtd_initial_setup_window_class_init (GtdInitialSetupWindowClass *klass)
 
   gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, cancel_button);
   gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, done_button);
-  gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, exchange_stub_row);
-  gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, google_stub_row);
-  gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, listbox);
-  gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, owncloud_stub_row);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdInitialSetupWindow, storage_selector);
 
   gtk_widget_class_bind_template_callback (widget_class, gtd_initial_setup_window__button_clicked);
-  gtk_widget_class_bind_template_callback (widget_class, gtd_initial_setup_window__check_toggled);
-  gtk_widget_class_bind_template_callback (widget_class, gtd_initial_setup_window__listbox_row_activated);
+  gtk_widget_class_bind_template_callback (widget_class, gtd_initial_setup_window__location_selected);
 }
 
 static void

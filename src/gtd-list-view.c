@@ -719,12 +719,27 @@ void
 gtd_list_view_set_list (GtdListView *view,
                         GList       *list)
 {
+  GList *l;
+
   g_return_if_fail (GTD_IS_LIST_VIEW (view));
 
   if (view->priv->list)
     g_list_free (view->priv->list);
 
+  /* clear previous tasks */
+  gtd_list_view__clear_list (view);
+
   view->priv->list = g_list_copy (list);
+
+  for (l = view->priv->list; l != NULL; l = l->next)
+    {
+      gtd_list_view__add_task (view, l->data);
+
+      g_signal_connect (l->data,
+                        "notify::complete",
+                        G_CALLBACK (gtd_list_view__task_completed),
+                        view);
+    }
 }
 
 /**
@@ -898,7 +913,7 @@ gtd_list_view_set_task_list (GtdListView *view,
       gdk_rgba_free (color);
       g_free (color_str);
 
-      /* Load taska */
+      /* Load task */
       priv->task_list = list;
 
       update_font_color (view);
@@ -906,15 +921,7 @@ gtd_list_view_set_task_list (GtdListView *view,
       /* Add the tasks from the list */
       task_list = gtd_task_list_get_tasks (list);
 
-      for (l = task_list; l != NULL; l = l->next)
-        {
-          gtd_list_view__add_task (view, l->data);
-
-          g_signal_connect (l->data,
-                            "notify::complete",
-                            G_CALLBACK (gtd_list_view__task_completed),
-                            view);
-        }
+      gtd_list_view_set_list (view, task_list);
 
       g_list_free (task_list);
 

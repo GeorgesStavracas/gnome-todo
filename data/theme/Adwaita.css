@@ -14,6 +14,15 @@ GtdTaskListItem.thumbnail {
     font-size: 9px;
 }
 
+GtdTaskListItem.dark,
+GtdListView.dark GtdTaskRow {
+    color: #eeeeec;
+}
+
+GtdListView.dark GtdTaskRow:hover {
+    background-color: alpha(@theme_bg_color, 0.2);
+}
+
 GtdArrowFrame {
     border-bottom-width: 0px;
     border-top-width: 0px;

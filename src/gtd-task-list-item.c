@@ -137,6 +137,14 @@ gtd_task_list_item__render_thumbnail (GtdTaskListItem *item)
   layout = pango_cairo_create_layout (cr);
   tasks = gtd_task_list_get_tasks (list);
 
+
+  /*
+   * If the list color is way too dark, we draw the task names in a light
+   * font color.
+   */
+  if (LUMINANCE (color) < 0.5)
+    gtk_style_context_add_class (context, "dark");
+
   /*
    * Sort the list, so that the first tasks are similar to what
    * the user will see when selecting the list.

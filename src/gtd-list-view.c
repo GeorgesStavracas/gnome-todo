@@ -64,6 +64,7 @@ struct _GtdListView
 };
 
 #define COLOR_TEMPLATE "GtkViewport {background-color: %s;}"
+#define LUMINANCE(c)   (0.299 * c->red + 0.587 * c->green + 0.114 * c->blue)
 
 #define TASK_REMOVED_NOTIFICATION_ID             "task-removed-id"
 
@@ -113,6 +114,32 @@ undo_remove_task_action (RemoveTaskData *data)
   g_free (data);
 
   return G_SOURCE_REMOVE;
+}
+
+static void
+update_font_color (GtdListView *view)
+{
+  GtdListViewPrivate *priv;
+
+  g_return_if_fail (GTD_IS_LIST_VIEW (view));
+
+  priv = view->priv;
+
+  if (priv->task_list)
+    {
+      GtkStyleContext *context;
+      GdkRGBA *color;
+
+      context = gtk_widget_get_style_context (GTK_WIDGET (view));
+      color = gtd_task_list_get_color (priv->task_list);
+
+      if (LUMINANCE (color) < 0.5)
+        gtk_style_context_add_class (context, "dark");
+      else
+        gtk_style_context_remove_class (context, "dark");
+
+      gdk_rgba_free (color);
+    }
 }
 
 static void
@@ -196,6 +223,8 @@ gtd_list_view__color_changed (GObject    *object,
                                    parsed_css,
                                    -1,
                                    NULL);
+
+  update_font_color (GTD_LIST_VIEW (user_data));
 
   gdk_rgba_free (color);
   g_free (color_str);
@@ -872,8 +901,7 @@ gtd_list_view_set_task_list (GtdListView *view,
       /* Load taska */
       priv->task_list = list;
 
-      /* clear previous tasks */
-      gtd_list_view__clear_list (view);
+      update_font_color (view);
 
       /* Add the tasks from the list */
       task_list = gtd_task_list_get_tasks (list);

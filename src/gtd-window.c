@@ -32,6 +32,7 @@ typedef struct
   GtkHeaderBar                  *headerbar;
   GtkFlowBox                    *lists_flowbox;
   GtkStack                      *main_stack;
+  GtkWidget                     *new_list_popover;
   GtkButton                     *notification_action_button;
   GtkLabel                      *notification_label;
   GtkRevealer                   *notification_revealer;
@@ -335,6 +336,12 @@ gtd_window_constructed (GObject *object)
                               (GtkFlowBoxSortFunc) gtd_window__listbox_sort_func,
                               NULL,
                               NULL);
+
+  g_object_bind_property (object,
+                          "manager",
+                          priv->new_list_popover,
+                          "manager",
+                          G_BINDING_DEFAULT);
 }
 
 GtkWidget*
@@ -450,6 +457,7 @@ gtd_window_class_init (GtdWindowClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, lists_flowbox);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, list_view);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, main_stack);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, new_list_popover);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, notification_action_button);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, notification_label);
   gtk_widget_class_bind_template_child_private (widget_class, GtdWindow, notification_revealer);

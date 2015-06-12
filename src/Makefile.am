@@ -21,8 +21,6 @@ gnome_todo_SOURCES = \
 	gtd-edit-pane.c \
 	gtd-edit-pane.h \
 	gtd-enums.h \
-	gtd-goa-row.c \
-	gtd-goa-row.h \
 	gtd-initial-setup-window.c \
 	gtd-initial-setup-window.h \
 	gtd-list-view.c \
@@ -31,6 +29,12 @@ gnome_todo_SOURCES = \
 	gtd-manager.h \
 	gtd-object.c \
 	gtd-object.h \
+	gtd-storage.c \
+	gtd-storage.h \
+	gtd-storage-popover.c \
+	gtd-storage-popover.h \
+	gtd-storage-row.c \
+	gtd-storage-row.h \
 	gtd-storage-selector.c \
 	gtd-storage-selector.h \
 	gtd-task.c \

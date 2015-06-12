@@ -17,6 +17,7 @@
  */
 
 #include "gtd-manager.h"
+#include "gtd-storage.h"
 #include "gtd-task.h"
 #include "gtd-task-list.h"
 
@@ -34,6 +35,9 @@ typedef struct
   /* Online accounts */
   GoaClient             *goa_client;
   gboolean               goa_client_ready;
+  GList                 *storage_locations;
+
+  GSettings             *settings;
 
   /*
    * Small flag that contains the number of sources
@@ -53,11 +57,21 @@ struct _GtdManager
 
 G_DEFINE_TYPE_WITH_PRIVATE (GtdManager, gtd_manager, GTD_TYPE_OBJECT)
 
+const gchar *supported_providers[] = {
+  "exchange",
+  "google",
+  "owncloud",
+  NULL
+};
+
 enum
 {
   LIST_ADDED,
   LIST_CHANGED,
   LIST_REMOVED,
+  STORAGE_ADDED,
+  STORAGE_CHANGED,
+  STORAGE_REMOVED,
   NUM_SIGNALS
 };
 
@@ -71,6 +85,113 @@ enum
 };
 
 static guint signals[NUM_SIGNALS] = { 0, };
+
+static void
+gtd_manager__goa_account_removed_cb (GoaClient  *client,
+                                     GoaObject  *object,
+                                     GtdManager *manager)
+{
+  GtdManagerPrivate *priv;
+  GoaAccount *account;
+
+  g_return_if_fail (GTD_IS_MANAGER (manager));
+
+  priv = manager->priv;
+  account = goa_object_get_account (object);
+
+  if (g_strv_contains (supported_providers, goa_account_get_provider_type (account)))
+    {
+      GList *l;
+
+      for (l = priv->storage_locations; l != NULL; l = l->next)
+        {
+          if (g_strcmp0 (goa_account_get_id (account), gtd_storage_get_id (l->data)) == 0)
+            {
+              GtdStorage *storage = l->data;
+
+              if (gtd_storage_get_is_default (storage))
+                {
+                  g_settings_set_string (priv->settings,
+                                         "storage-location",
+                                         "local");
+                }
+
+              priv->storage_locations = g_list_remove (priv->storage_locations, storage);
+
+              g_object_unref (storage);
+
+              g_signal_emit (manager, signals[STORAGE_REMOVED], 0, storage);
+              break;
+            }
+        }
+    }
+}
+
+static void
+gtd_manager__goa_account_changed_cb (GoaClient  *client,
+                                     GoaObject  *object,
+                                     GtdManager *manager)
+{
+  GtdManagerPrivate *priv;
+  GoaAccount *account;
+
+  g_return_if_fail (GTD_IS_MANAGER (manager));
+
+  priv = manager->priv;
+  account = goa_object_get_account (object);
+
+  if (g_strv_contains (supported_providers, goa_account_get_provider_type (account)))
+    {
+      GList *l;
+
+      for (l = priv->storage_locations; l != NULL; l = l->next)
+        {
+          if (g_strcmp0 (goa_account_get_id (account), gtd_storage_get_id (l->data)) == 0)
+            {
+              g_signal_emit (manager, signals[STORAGE_CHANGED], 0, l->data);
+              break;
+            }
+        }
+    }
+}
+
+static void
+gtd_manager__goa_account_added_cb (GoaClient  *client,
+                                   GoaObject  *object,
+                                   GtdManager *manager)
+{
+  GtdManagerPrivate *priv;
+  GoaAccount *account;
+
+  g_return_if_fail (GTD_IS_MANAGER (manager));
+
+  priv = manager->priv;
+  account = goa_object_get_account (object);
+
+  if (g_strv_contains (supported_providers, goa_account_get_provider_type (account)))
+    {
+      GtdStorage *storage;
+      gchar *default_location;
+
+      default_location = g_settings_get_string (priv->settings, "storage-location");
+
+      storage = gtd_storage_new (goa_account_get_id (account),
+                                 goa_account_get_provider_type (account),
+                                 goa_account_get_provider_name (account),
+                                 goa_account_get_identity (account));
+
+      gtd_storage_set_enabled (storage, !goa_account_get_calendar_disabled (account));
+      gtd_storage_set_is_default (storage, g_strcmp0 (gtd_storage_get_id (storage), default_location) == 0);
+
+      priv->storage_locations = g_list_insert_sorted (priv->storage_locations,
+                                                      storage,
+                                                      (GCompareFunc) gtd_storage_compare);
+
+      g_signal_emit (manager, signals[STORAGE_ADDED], 0, storage);
+
+      g_free (default_location);
+    }
+}
 
 static void
 gtd_manager__goa_client_finish_cb (GObject      *client,
@@ -88,7 +209,64 @@ gtd_manager__goa_client_finish_cb (GObject      *client,
   priv->goa_client_ready = TRUE;
   priv->goa_client = goa_client_new_finish (result, &error);
 
-  if (error)
+  if (!error)
+    {
+      GList *accounts;
+      GList *l;
+      gchar *default_location;
+
+      /* Load each supported GoaAccount into a GtdStorage */
+      accounts = goa_client_get_accounts (priv->goa_client);
+      default_location = g_settings_get_string (priv->settings, "storage-location");
+
+      for (l = accounts; l != NULL; l = l->next)
+        {
+          GoaObject *object;
+          GoaAccount *account;
+
+          object = l->data;
+          account = goa_object_get_account (object);
+
+          if (g_strv_contains (supported_providers, goa_account_get_provider_type (account)))
+            {
+              GtdStorage *storage;
+
+              storage = gtd_storage_new (goa_account_get_id (account),
+                                         goa_account_get_provider_type (account),
+                                         goa_account_get_provider_name (account),
+                                         goa_account_get_identity (account));
+
+              gtd_storage_set_enabled (storage, !goa_account_get_calendar_disabled (account));
+              gtd_storage_set_is_default (storage, g_strcmp0 (gtd_storage_get_id (storage), default_location) == 0);
+
+              priv->storage_locations = g_list_insert_sorted (priv->storage_locations,
+                                                              storage,
+                                                              (GCompareFunc) gtd_storage_compare);
+
+              g_signal_emit (user_data, signals[STORAGE_ADDED], 0, storage);
+            }
+        }
+
+      /* Connect GoaClient signals */
+      g_signal_connect (priv->goa_client,
+                        "account-added",
+                        G_CALLBACK (gtd_manager__goa_account_added_cb),
+                        user_data);
+
+      g_signal_connect (priv->goa_client,
+                        "account-changed",
+                        G_CALLBACK (gtd_manager__goa_account_changed_cb),
+                        user_data);
+
+      g_signal_connect (priv->goa_client,
+                        "account-removed",
+                        G_CALLBACK (gtd_manager__goa_account_removed_cb),
+                        user_data);
+
+      g_list_free_full (accounts, g_object_unref);
+      g_free (default_location);
+    }
+  else
     {
       g_warning ("%s: %s: %s",
                  G_STRFUNC,
@@ -622,8 +800,12 @@ static void
 gtd_manager_constructed (GObject *object)
 {
   GtdManagerPrivate *priv = GTD_MANAGER (object)->priv;
+  GtdStorage *local_storage;
+  gchar *default_location;
 
   G_OBJECT_CLASS (gtd_manager_parent_class)->constructed (object);
+
+  default_location = g_settings_get_string (priv->settings, "storage-location");
 
   /* hash table */
   priv->clients = g_hash_table_new_full ((GHashFunc) e_source_hash,
@@ -636,10 +818,22 @@ gtd_manager_constructed (GObject *object)
                          (GAsyncReadyCallback) gtd_manager__source_registry_finish_cb,
                          object);
 
+  /* local storage location */
+  local_storage = gtd_storage_new ("local",
+                                   "local",
+                                   _("Local"),
+                                   _("On This Computer"));
+  gtd_storage_set_enabled (local_storage, TRUE);
+  gtd_storage_set_is_default (local_storage, g_strcmp0 (default_location, "local") == 0);
+
+  priv->storage_locations = g_list_append (priv->storage_locations, local_storage);
+
   /* online accounts */
   goa_client_new (NULL,
                   (GAsyncReadyCallback) gtd_manager__goa_client_finish_cb,
                   object);
+
+  g_free (default_location);
 }
 
 static void
@@ -744,12 +938,64 @@ gtd_manager_class_init (GtdManagerClass *klass)
                                         G_TYPE_NONE,
                                         1,
                                         GTD_TYPE_TASK_LIST);
+
+  /**
+   * GtdManager::storage-added:
+   *
+   * The ::storage-added signal is emmited after a #GtdStorage
+   * is added.
+   */
+  signals[STORAGE_ADDED] = g_signal_new ("storage-added",
+                                         GTD_TYPE_MANAGER,
+                                         G_SIGNAL_RUN_LAST,
+                                         0,
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                         G_TYPE_NONE,
+                                         1,
+                                         GTD_TYPE_STORAGE);
+
+  /**
+   * GtdManager::storage-changed:
+   *
+   * The ::storage-changed signal is emmited after a #GtdStorage
+   * is changed.
+   */
+  signals[STORAGE_CHANGED] = g_signal_new ("storage-changed",
+                                           GTD_TYPE_MANAGER,
+                                           G_SIGNAL_RUN_LAST,
+                                           0,
+                                           NULL,
+                                          NULL,
+                                          NULL,
+                                          G_TYPE_NONE,
+                                          1,
+                                          GTD_TYPE_STORAGE);
+
+  /**
+   * GtdManager::storage-removed:
+   *
+   * The ::storage-removed signal is emmited after a #GtdStorage
+   * is removed from the list.
+   */
+  signals[STORAGE_REMOVED] = g_signal_new ("storage-removed",
+                                           GTD_TYPE_MANAGER,
+                                           G_SIGNAL_RUN_LAST,
+                                           0,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           G_TYPE_NONE,
+                                           1,
+                                           GTD_TYPE_STORAGE);
 }
 
 static void
 gtd_manager_init (GtdManager *self)
 {
   self->priv = gtd_manager_get_instance_private (self);
+  self->priv->settings = g_settings_new ("org.gnome.todo");
 }
 
 GtdManager*
@@ -977,4 +1223,20 @@ gtd_manager_get_task_lists (GtdManager *manager)
   g_return_val_if_fail (GTD_IS_MANAGER (manager), NULL);
 
   return g_list_copy (manager->priv->task_lists);
+}
+
+/**
+ * gtd_manager_get_storage_locations:
+ *
+ * Retrieves the list of available #GtdStorage.
+ *
+ * Returns: (transfer full): (type #GtdStorage): a newly allocated #GList of
+ * #GtdStorage. Free with @g_list_free after use.
+ */
+GList*
+gtd_manager_get_storage_locations (GtdManager *manager)
+{
+  g_return_val_if_fail (GTD_IS_MANAGER (manager), NULL);
+
+  return g_list_copy (manager->priv->storage_locations);
 }

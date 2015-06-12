@@ -39,6 +39,8 @@ ESourceRegistry*        gtd_manager_get_source_registry   (GtdManager           
 
 GList*                  gtd_manager_get_task_lists        (GtdManager           *manager);
 
+GList*                  gtd_manager_get_storage_locations (GtdManager           *manager);
+
 void                    gtd_manager_remove_task_list      (GtdManager           *manager,
                                                            GtdTaskList          *list);
 

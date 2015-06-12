@@ -1,4 +1,4 @@
-/* gtd-goa-row.h
+/* gtd-storage-row.h
  *
  * Copyright (C) 2015 Georges Basile Stavracas Neto <georges.stavracas@gmail.com>
  *
@@ -27,18 +27,18 @@
 
 G_BEGIN_DECLS
 
-#define GTD_TYPE_GOA_ROW (gtd_goa_row_get_type())
+#define GTD_TYPE_STORAGE_ROW (gtd_storage_row_get_type())
 
-G_DECLARE_FINAL_TYPE (GtdGoaRow, gtd_goa_row, GTD, GOA_ROW, GtkListBoxRow)
+G_DECLARE_FINAL_TYPE (GtdStorageRow, gtd_storage_row, GTD, STORAGE_ROW, GtkListBoxRow)
 
-GtkWidget*                  gtd_goa_row_new                      (GoaAccount          *account);
+GtkWidget*                  gtd_storage_row_new                  (GtdStorage          *storage);
 
-GoaAccount*                 gtd_goa_row_get_account              (GtdGoaRow           *row);
+gboolean                    gtd_storage_row_get_selected         (GtdStorageRow       *row);
 
-gboolean                    gtd_goa_row_get_selected             (GtdGoaRow           *row);
-
-void                        gtd_goa_row_set_selected             (GtdGoaRow           *row,
+void                        gtd_storage_row_set_selected         (GtdStorageRow       *row,
                                                                   gboolean             selected);
+
+GtdStorage*                 gtd_storage_row_get_storage          (GtdStorageRow       *row);
 
 G_END_DECLS
 

@@ -32,6 +32,19 @@ G_DECLARE_FINAL_TYPE (GtdStorageSelector, gtd_storage_selector, GTD, STORAGE_SEL
 
 GtkWidget*         gtd_storage_selector_new                      (void);
 
+void               gtd_storage_selector_show_local               (GtdStorageSelector *selector,
+                                                                  gboolean            show);
+
+gboolean           gtd_storage_selector_get_select_default       (GtdStorageSelector *selector);
+
+void               gtd_storage_selector_set_select_default       (GtdStorageSelector *selector,
+                                                                  gboolean            select_default);
+
+GtdStorage*        gtd_storage_selector_get_selected_storage     (GtdStorageSelector *selector);
+
+void               gtd_storage_selector_set_selected_storage     (GtdStorageSelector *selector,
+                                                                  GtdStorage         *storage);
+
 G_END_DECLS
 
 #endif /* GTD_STORAGE_SELECTOR_H */

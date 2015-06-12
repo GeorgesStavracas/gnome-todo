@@ -16,8 +16,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "gtd-goa-row.h"
+#include "gtd-application.h"
 #include "gtd-manager.h"
+#include "gtd-storage.h"
+#include "gtd-storage-row.h"
 #include "gtd-storage-selector.h"
 
 #include <glib/gi18n.h>
@@ -25,13 +27,18 @@
 typedef struct
 {
   GtkWidget                 *listbox;
+  GtkWidget                 *local_check;
 
   /* stub rows */
   GtkWidget                 *exchange_stub_row;
   GtkWidget                 *google_stub_row;
   GtkWidget                 *owncloud_stub_row;
+  GtkWidget                 *local_row;
 
   GtdManager                *manager;
+
+  gint                      select_default : 1;
+  gint                      show_local_storage : 1;
 } GtdStorageSelectorPrivate;
 
 struct _GtdStorageSelector
@@ -44,21 +51,16 @@ struct _GtdStorageSelector
 
 G_DEFINE_TYPE_WITH_PRIVATE (GtdStorageSelector, gtd_storage_selector, GTK_TYPE_BOX)
 
-const gchar *supported_providers[] = {
-  "exchange",
-  "google",
-  "owncloud",
-  NULL
-};
-
 enum {
   PROP_0,
   PROP_MANAGER,
+  PROP_SELECT_DEFAULT,
+  PROP_SHOW_LOCAL,
   LAST_PROP
 };
 
 enum {
-  LOCATION_SELECTED,
+  STORAGE_SELECTED,
   LAST_SIGNAL
 };
 
@@ -118,35 +120,35 @@ gtd_storage_selector__listbox_row_activated (GtdStorageSelector *selector,
     }
   else
     {
-      GoaAccount *account;
+      GtdStorage *storage;
       GList *children;
       GList *l;
 
       children = gtk_container_get_children (GTK_CONTAINER (priv->listbox));
-      account = gtd_goa_row_get_account (GTD_GOA_ROW (row));
+      storage = gtd_storage_row_get_storage (GTD_STORAGE_ROW (row));
 
       for (l = children; l != NULL; l = l->next)
         {
-          if (GTD_IS_GOA_ROW (l->data))
-            gtd_goa_row_set_selected (l->data, FALSE);
+          if (GTD_IS_STORAGE_ROW (l->data))
+            gtd_storage_row_set_selected (l->data, FALSE);
         }
-
-      g_list_free (children);
 
       /*
        * If the account has it's calendars disabled, we cannot let it
        * be a default storage location. Instead, open the Control Center
        * to give the user the ability to change it.
        */
-      if (goa_account_get_calendar_disabled (account))
+      if (gtd_storage_get_enabled (storage))
         {
-          spawn ((gchar*) goa_account_get_id (account), NULL);
+          gtd_storage_row_set_selected (GTD_STORAGE_ROW (row), TRUE);
+          g_signal_emit (selector, signals[STORAGE_SELECTED], 0, storage);
         }
       else
         {
-          gtd_goa_row_set_selected (GTD_GOA_ROW (row), TRUE);
-          g_signal_emit (selector, signals[LOCATION_SELECTED], 0, goa_account_get_id (account));
+          spawn ((gchar*) gtd_storage_get_id (storage), NULL);
         }
+
+      g_list_free (children);
     }
 }
 
@@ -167,15 +169,17 @@ gtd_storage_selector__check_toggled (GtdStorageSelector *selector,
 
   if (gtk_toggle_button_get_active (check))
     {
+      GtdStorage *local_storage;
       GList *children;
       GList *l;
 
       children = gtk_container_get_children (GTK_CONTAINER (priv->listbox));
+      local_storage = gtd_storage_row_get_storage (GTD_STORAGE_ROW (priv->local_row));
 
       for (l = children; l != NULL; l = l->next)
         {
-          if (GTD_IS_GOA_ROW (l->data))
-            gtd_goa_row_set_selected (l->data, FALSE);
+          if (GTD_IS_STORAGE_ROW (l->data))
+            gtd_storage_row_set_selected (l->data, FALSE);
         }
 
       g_list_free (children);
@@ -184,59 +188,126 @@ gtd_storage_selector__check_toggled (GtdStorageSelector *selector,
        * Sets the storage location to "local", and don't unset it if the
        * check gets deactivated.
        */
-      g_signal_emit (selector, signals[LOCATION_SELECTED], 0, "local");
+      g_signal_emit (selector, signals[STORAGE_SELECTED], 0, local_storage);
     }
   else
     {
-      g_signal_emit (selector, signals[LOCATION_SELECTED], 0, NULL);
+      g_signal_emit (selector, signals[STORAGE_SELECTED], 0, NULL);
     }
+}
+
+static void
+gtd_storage_selector__remove_storage (GtdStorageSelector *selector,
+                                      GtdStorage         *storage)
+{
+  GtdStorageSelectorPrivate *priv;
+  GtkWidget *row;
+  GList *children;
+  GList *l;
+  gint exchange;
+  gint google;
+  gint owncloud;
+
+  g_return_if_fail (GTD_IS_STORAGE_SELECTOR (selector));
+  g_return_if_fail (GTD_IS_STORAGE (storage));
+
+  priv = selector->priv;
+  children = gtk_container_get_children (GTK_CONTAINER (priv->listbox));
+  exchange = google = owncloud = 0;
+
+  for (l = children; l != NULL; l = l->next)
+    {
+      GtdStorage *row_storage;
+      const gchar *provider;
+
+      if (!GTD_IS_STORAGE_ROW (l->data))
+        continue;
+
+      row_storage = gtd_storage_row_get_storage (l->data);
+      provider = gtd_storage_get_provider (row_storage);
+
+      if (row_storage == storage)
+        {
+          gtk_widget_destroy (l->data);
+        }
+      else
+        {
+          if (g_strcmp0 (provider, "exchange") == 0)
+            exchange++;
+          else if (g_strcmp0 (provider, "google") == 0)
+            google++;
+          else if (g_strcmp0 (provider, "owncloud") == 0)
+            owncloud++;
+        }
+    }
+
+  gtk_widget_set_visible (priv->exchange_stub_row, exchange == 0);
+  gtk_widget_set_visible (priv->google_stub_row, google == 0);
+  gtk_widget_set_visible (priv->owncloud_stub_row, owncloud == 0);
+
+  g_list_free (children);
+}
+
+static void
+gtd_storage_selector__add_storage (GtdStorageSelector *selector,
+                                   GtdStorage         *storage)
+{
+  GtdStorageSelectorPrivate *priv;
+  GtkWidget *row;
+  const gchar *provider;
+
+  g_return_if_fail (GTD_IS_STORAGE_SELECTOR (selector));
+  g_return_if_fail (GTD_IS_STORAGE (storage));
+
+  priv = selector->priv;
+
+  row = gtd_storage_row_new (storage);
+  provider = gtd_storage_get_provider (storage);
+
+  gtk_container_add (GTK_CONTAINER (priv->listbox), row);
+
+  /* track the local provider row */
+  if (g_strcmp0 (provider, "local") == 0)
+    {
+      gtk_widget_set_visible (row, priv->show_local_storage);
+      priv->local_row = row;
+    }
+
+  /* Auto selects the default storage row when needed */
+  if (priv->select_default &&
+      gtd_storage_get_is_default (storage) &&
+      !gtd_storage_selector_get_selected_storage (selector))
+    {
+      gtd_storage_selector_set_selected_storage (selector, storage);
+    }
+
+  /* hide the related stub row */
+  if (g_strcmp0 (provider, "exchange") == 0)
+    gtk_widget_hide (priv->exchange_stub_row);
+  else if (g_strcmp0 (provider, "google") == 0)
+    gtk_widget_hide (priv->google_stub_row);
+  else if (g_strcmp0 (provider, "owncloud") == 0)
+    gtk_widget_hide (priv->owncloud_stub_row);
 }
 
 static void
 gtd_storage_selector__fill_accounts (GtdStorageSelector *selector)
 {
   GtdStorageSelectorPrivate *priv;
-  GoaClient *goa_client;
-  GList *accounts;
+  GList *storage_locations;
   GList *l;
 
   g_return_if_fail (GTD_IS_STORAGE_SELECTOR (selector));
 
-  priv = GTD_STORAGE_SELECTOR (selector)->priv;
-  goa_client = gtd_manager_get_goa_client (priv->manager);
+  priv = selector->priv;
 
   /* load accounts */
-  accounts = goa_client_get_accounts (goa_client);
+  storage_locations = gtd_manager_get_storage_locations (priv->manager);
 
-  for (l = accounts; l != NULL; l = l->next)
-    {
-      const gchar* provider;
-      GoaObject *object;
-      GoaAccount *account;
+  for (l = storage_locations; l != NULL; l = l->next)
+    gtd_storage_selector__add_storage (selector, l->data);
 
-      object = l->data;
-      account = goa_object_get_account (object);
-      provider = goa_account_get_provider_type (account);
-
-      if (g_strv_contains (supported_providers, provider))
-        {
-          GtkWidget *row;
-
-          row = gtd_goa_row_new (account);
-
-          gtk_container_add (GTK_CONTAINER (priv->listbox), row);
-
-          /* hide the related stub row */
-          if (g_strcmp0 (provider, "exchange") == 0)
-            gtk_widget_hide (priv->exchange_stub_row);
-          if (g_strcmp0 (provider, "google") == 0)
-            gtk_widget_hide (priv->google_stub_row);
-          if (g_strcmp0 (provider, "owncloud") == 0)
-            gtk_widget_hide (priv->owncloud_stub_row);
-        }
-    }
-
-  g_list_free_full (accounts, g_object_unref);
+  g_list_free (storage_locations);
 }
 
 static gint
@@ -244,29 +315,21 @@ sort_func (GtkListBoxRow *row1,
            GtkListBoxRow *row2,
            gpointer       user_data)
 {
-  GoaAccount *a1;
-  GoaAccount *a2;
-  GtdGoaRow *r1;
-  GtdGoaRow *r2;
+  GtdStorageRow *r1;
+  GtdStorageRow *r2;
+  GtdStorage *storage1;
+  GtdStorage *storage2;
   gint retval;
 
-  if (!GTD_IS_GOA_ROW (row1))
+  if (!GTD_IS_STORAGE_ROW (row1))
     return 1;
-  if (!GTD_IS_GOA_ROW (row2))
+  else if (!GTD_IS_STORAGE_ROW (row2))
     return -1;
 
-  r1 = GTD_GOA_ROW (row1);
-  r2 = GTD_GOA_ROW (row2);
+  storage1 = gtd_storage_row_get_storage (GTD_STORAGE_ROW (row1));
+  storage2 = gtd_storage_row_get_storage (GTD_STORAGE_ROW (row2));
 
-  a1 = gtd_goa_row_get_account (r1);
-  a2 = gtd_goa_row_get_account (r2);
-
-  retval = g_strcmp0 (goa_account_get_provider_type (a1), goa_account_get_provider_type (a2));
-
-  if (retval != 0)
-    return retval;
-  else
-    return g_strcmp0 (goa_account_get_identity (a1), goa_account_get_identity (a2));
+  return gtd_storage_compare (storage1, storage2);
 }
 
 static void
@@ -311,6 +374,14 @@ gtd_storage_selector_get_property (GObject    *object,
       g_value_set_object (value, self->priv->manager);
       break;
 
+    case PROP_SELECT_DEFAULT:
+      g_value_set_boolean (value, self->priv->select_default);
+      break;
+
+    case PROP_SHOW_LOCAL:
+      g_value_set_boolean (value, self->priv->show_local_storage);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
     }
@@ -332,20 +403,29 @@ gtd_storage_selector_set_property (GObject      *object,
       if (!self->priv->manager)
         break;
 
-      if (gtd_manager_is_goa_client_ready (self->priv->manager))
-        {
-          gtd_storage_selector__fill_accounts (self);
-        }
-      else
-        {
-          g_signal_connect_swapped (self->priv->manager,
-                                    "notify::goa-client-ready",
-                                    G_CALLBACK (gtd_storage_selector__fill_accounts),
-                                    self);
-        }
+      gtd_storage_selector__fill_accounts (self);
+
+      g_signal_connect_swapped (self->priv->manager,
+                                "storage-added",
+                                G_CALLBACK (gtd_storage_selector__add_storage),
+                                object);
+
+      g_signal_connect_swapped (self->priv->manager,
+                                "storage-removed",
+                                G_CALLBACK (gtd_storage_selector__remove_storage),
+                                object);
 
       g_object_notify (object, "manager");
       break;
+
+    case PROP_SELECT_DEFAULT:
+      gtd_storage_selector_set_select_default (self, g_value_get_boolean (value));
+      break;
+
+    case PROP_SHOW_LOCAL:
+      gtd_storage_selector_show_local (self, g_value_get_boolean (value));
+      break;
+
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -368,7 +448,7 @@ gtd_storage_selector_class_init (GtdStorageSelectorClass *klass)
    *
    * Emitted when a storage location is selected.
    */
-  signals[LOCATION_SELECTED] = g_signal_new ("location-selected",
+  signals[STORAGE_SELECTED] = g_signal_new ("storage-selected",
                                              GTD_TYPE_STORAGE_SELECTOR,
                                              G_SIGNAL_RUN_LAST,
                                              0,
@@ -377,7 +457,7 @@ gtd_storage_selector_class_init (GtdStorageSelectorClass *klass)
                                              NULL,
                                              G_TYPE_NONE,
                                              1,
-                                             G_TYPE_STRING);
+                                             GTD_TYPE_STORAGE);
 
   /**
    * GtdStorageSelector::manager:
@@ -393,11 +473,40 @@ gtd_storage_selector_class_init (GtdStorageSelectorClass *klass)
                              GTD_TYPE_MANAGER,
                              G_PARAM_READWRITE));
 
+  /**
+   * GtdStorageSelector::show-local-storage:
+   *
+   * Whether it should show a row for the local storage.
+   */
+  g_object_class_install_property (
+        object_class,
+        PROP_SHOW_LOCAL,
+        g_param_spec_boolean ("show-local",
+                              _("Show local storage row"),
+                              _("Whether should show a local storage row instead of a checkbox"),
+                              FALSE,
+                              G_PARAM_READWRITE));
+
+  /**
+   * GtdStorageSelector::select-default:
+   *
+   * Whether it should auto selects the default storage location row.
+   */
+  g_object_class_install_property (
+        object_class,
+        PROP_SELECT_DEFAULT,
+        g_param_spec_boolean ("select-default",
+                              _("Selects default storage row"),
+                              _("Whether should select the default storage row"),
+                              FALSE,
+                              G_PARAM_READWRITE));
+
   gtk_widget_class_set_template_from_resource (widget_class, "/org/gnome/todo/ui/storage-selector.ui");
 
   gtk_widget_class_bind_template_child_private (widget_class, GtdStorageSelector, exchange_stub_row);
   gtk_widget_class_bind_template_child_private (widget_class, GtdStorageSelector, google_stub_row);
   gtk_widget_class_bind_template_child_private (widget_class, GtdStorageSelector, listbox);
+  gtk_widget_class_bind_template_child_private (widget_class, GtdStorageSelector, local_check);
   gtk_widget_class_bind_template_child_private (widget_class, GtdStorageSelector, owncloud_stub_row);
 
   gtk_widget_class_bind_template_callback (widget_class, gtd_storage_selector__check_toggled);
@@ -423,4 +532,173 @@ GtkWidget*
 gtd_storage_selector_new (void)
 {
   return g_object_new (GTD_TYPE_STORAGE_SELECTOR, NULL);
+}
+
+/**
+ * gtd_storage_selector_show_local:
+ *
+ * Shows a row for local storage item.
+ *
+ * Returns:
+ */
+void
+gtd_storage_selector_show_local (GtdStorageSelector *selector,
+                                 gboolean            show)
+{
+  GtdStorageSelectorPrivate *priv;
+
+  g_return_if_fail (GTD_IS_STORAGE_SELECTOR (selector));
+
+  priv = selector->priv;
+
+  if (priv->show_local_storage != show)
+    {
+      priv->show_local_storage = show;
+
+      gtk_widget_set_visible (priv->local_check, !show);
+      gtk_widget_set_visible (priv->local_row, show);
+
+      g_object_notify (G_OBJECT (selector), "show-local");
+    }
+}
+
+/**
+ * gtd_storage_selector_get_select_default:
+ * @selector: a #GtdStorageSelector
+ *
+ * Whether the default storage location is selected by default.
+ *
+ * Returns: %TRUE if the default storage location is selected automatically,
+ * %FALSE otherwise.
+ */
+gboolean
+gtd_storage_selector_get_select_default (GtdStorageSelector *selector)
+{
+  g_return_val_if_fail (GTD_IS_STORAGE_SELECTOR (selector), FALSE);
+
+  return selector->priv->select_default;
+}
+
+/**
+ * gtd_storage_selector_set_select_default:
+ * @selector: a #GtdStorageSelector
+ * @select_default: %TRUE to auto select the default storage location.
+ *
+ * Whether @selector should select the default storage location by default.
+ *
+ * Returns:
+ */
+void
+gtd_storage_selector_set_select_default (GtdStorageSelector *selector,
+                                         gboolean            select_default)
+{
+  GtdStorageSelectorPrivate *priv;
+
+  g_return_if_fail (GTD_IS_STORAGE_SELECTOR (selector));
+
+  priv = selector->priv;
+
+  if (priv->select_default != select_default)
+    {
+      priv->select_default = select_default;
+
+      if (select_default)
+        {
+          GList *children;
+          GList *l;
+
+          /* Select the appropriate row */
+          children = gtk_container_get_children (GTK_CONTAINER (priv->listbox));
+
+          for (l = children; l != NULL; l = l->next)
+            {
+              if (GTD_IS_STORAGE_ROW (l->data))
+                {
+                  GtdStorage *storage = gtd_storage_row_get_storage (l->data);
+
+                  if (gtd_storage_get_is_default (storage))
+                    {
+                      gtd_storage_row_set_selected (l->data, TRUE);
+                      g_signal_emit (selector, signals[STORAGE_SELECTED], 0, storage);
+                    }
+                }
+            }
+
+          g_list_free (children);
+        }
+
+      g_object_notify (G_OBJECT (selector), "select-default");
+    }
+}
+
+/**
+ * gtd_storage_selector_get_selected_storage:
+ * @selector: a #GtdStorageSelector
+ *
+ * Retrieves the currently selected #GtdStorage, or %NULL if
+ * none is selected.
+ *
+ * Returns: (transfer none): the selected #GtdStorage
+ */
+GtdStorage*
+gtd_storage_selector_get_selected_storage (GtdStorageSelector *selector)
+{
+  GtdStorageSelectorPrivate *priv;
+  GtdStorage *storage;
+  GList *children;
+  GList *l;
+
+  g_return_val_if_fail (GTD_IS_STORAGE_SELECTOR (selector), NULL);
+
+  priv = selector->priv;
+  storage = NULL;
+  children = gtk_container_get_children (GTK_CONTAINER (priv->listbox));
+
+  for (l = children; l != NULL; l = l->next)
+    {
+      if (GTD_IS_STORAGE_ROW (l->data) && gtd_storage_row_get_selected (l->data))
+        {
+          storage = gtd_storage_row_get_storage (l->data);
+          break;
+        }
+    }
+
+  g_list_free (children);
+
+  return storage;
+}
+
+/**
+ * gtd_storage_selector_set_selected_storage:
+ * @selector: a #GtdStorageSelector
+ * @storage: a #GtdStorage
+ *
+ * Selects @storage in the given #GtdStorageSelector.
+ *
+ * Returns:
+ */
+void
+gtd_storage_selector_set_selected_storage (GtdStorageSelector *selector,
+                                           GtdStorage         *storage)
+{
+  GtdStorageSelectorPrivate *priv;
+  GList *children;
+  GList *l;
+
+  g_return_if_fail (GTD_IS_STORAGE_SELECTOR (selector));
+
+  priv = selector->priv;
+  children = gtk_container_get_children (GTK_CONTAINER (priv->listbox));
+
+  for (l = children; l != NULL; l = l->next)
+    {
+      if (GTD_IS_STORAGE_ROW (l->data))
+        {
+          gtd_storage_row_set_selected (l->data, gtd_storage_row_get_storage (l->data) == storage);
+          g_signal_emit (selector, signals[STORAGE_SELECTED], 0, storage);
+          break;
+        }
+    }
+
+  g_list_free (children);
 }

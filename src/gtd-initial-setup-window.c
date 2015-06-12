@@ -17,7 +17,8 @@
  */
 
 #include "gtd-application.h"
-#include "gtd-goa-row.h"
+#include "gtd-storage.h"
+#include "gtd-storage-selector.h"
 #include "gtd-initial-setup-window.h"
 #include "gtd-manager.h"
 
@@ -59,18 +60,18 @@ static guint signals[LAST_SIGNAL] = { 0, };
 
 static void
 gtd_initial_setup_window__location_selected (GtdInitialSetupWindow *window,
-                                             const gchar           *location)
+                                             GtdStorage            *storage)
 {
   GtdInitialSetupWindowPrivate *priv;
 
   g_return_if_fail (GTD_IS_INITIAL_SETUP_WINDOW (window));
 
-  priv = GTD_INITIAL_SETUP_WINDOW (window)->priv;
+  priv = window->priv;
 
-  gtk_widget_set_sensitive (priv->done_button, location != NULL);
+  gtk_widget_set_sensitive (priv->done_button, storage != NULL);
 
-  if (location)
-    gtd_application_set_storage_location (priv->application, location);
+  if (storage)
+    gtd_application_set_storage_location (priv->application, gtd_storage_get_id (storage));
 }
 
 static void

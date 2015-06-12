@@ -55,7 +55,7 @@
             <property name="width_request">400</property>
             <property name="valign">center</property>
             <property name="halign">center</property>
-            <signal name="location-selected" handler="gtd_initial_setup_window__location_selected" object="GtdInitialSetupWindow" swapped="yes" />
+            <signal name="storage-selected" handler="gtd_initial_setup_window__location_selected" object="GtdInitialSetupWindow" swapped="yes" />
           </object>
         </child>
       </object>

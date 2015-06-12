@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk+" version="3.16"/>
+  <template class="GtdStoragePopover" parent="GtkPopover">
+    <property name="can_focus">False</property>
+    <property name="border_width">18</property>
+    <child>
+      <object class="GtkStack" id="stack">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="vhomogeneous">False</property>
+        <property name="transition_duration">300</property>
+        <property name="transition_type">slide-left-right</property>
+        <child>
+          <object class="GtkGrid" id="new_list_popover_grid">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="hexpand">True</property>
+            <property name="row_spacing">12</property>
+            <property name="column_spacing">12</property>
+            <child>
+              <object class="GtkButton" id="new_list_create_button">
+                <property name="label" translatable="yes">Create</property>
+                <property name="visible">True</property>
+                <property name="sensitive">False</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <style>
+                  <class name="suggested-action"/>
+                </style>
+              </object>
+              <packing>
+                <property name="left_attach">1</property>
+                <property name="top_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="new_list_cancel_button">
+                <property name="label" translatable="yes">Cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="new_list_popover_dim_label">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">List Name</property>
+                <property name="xalign">0</property>
+                <style>
+                  <class name="dim-label"/>
+                </style>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+                <property name="width">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkBox" id="location_box">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkEntry" id="new_list_name_entry">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="hexpand">True</property>
+                    <property name="width_chars">35</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="change_location_button">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <signal name="clicked" handler="gtd_storage_popover__change_location_clicked" object="GtdStoragePopover" swapped="yes" />
+                    <child>
+                      <object class="GtkImage" id="location_provider_image">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="pixel_size">16</property>
+                        <property name="icon_name">goa-account</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
+                <style>
+                  <class name="linked"/>
+                </style>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">1</property>
+                <property name="width">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="name">main</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkGrid" id="selector_grid">
+            <property name="visible">True</property>
+            <property name="column_spacing">12</property>
+            <property name="row_spacing">12</property>
+            <child>
+              <object class="GtkButton" id="back_button">
+                <property name="visible">True</property>
+                <property name="halign">start</property>
+                <child>
+                  <object class="GtkImage" id="back_image">
+                    <property name="visible">True</property>
+                    <property name="icon-name">go-previous-symbolic</property>
+                    <property name="pixel-size">16</property>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+                <property name="width">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="title_label">
+                <property name="visible">True</property>
+                <property name="hexpand">True</property>
+                <property name="label" translatable="yes">Select a storage location</property>
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">0</property>
+                <property name="width">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtdStorageSelector" id="storage_selector">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="show_local">True</property>
+                <property name="select_default">True</property>
+                <signal name="storage-selected" handler="gtd_storage_popover__storage_selected" object="GtdStoragePopover" swapped="yes" />
+              </object>
+              <packing>
+                <property name="left_attach">0</property>
+                <property name="top_attach">1</property>
+                <property name="width">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="name">selector</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </template>
+</interface>
